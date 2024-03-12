@@ -1,0 +1,101 @@
+---
+title: "Power Bayesian one-sample t-test"
+format: html
+---
+
+We consider the case of a one-sample $t$-test. To fix notation, let $X_1, \ldots, X_n$ be a sample of size $N$ from a normal distribution with unknown mean $\mu$ and unknown variance $\sigma^2$. We are interested in testing the null hypothesis $H_0: \mu = \mu_0$ against the alternative hypothesis $H_1: \mu \neq \mu_0$.
+Moreover, we use the approximate adjusted fractional Bayes factor [AAFBF\; @guetal], which implies that we approximate the posterior distribution of the parameters by a normal distribution with mean and variance equal to the maximum likelihood estimates. 
+Using this method, the Bayes factor is given by
+$$
+\begin{aligned}
+BF_{0,u} &= \frac{f_0}{c_0} \\
+&= \frac{P(\mu = \mu_0 | X)}{P(\mu = \mu_0 | \pi_0)}, 
+\end{aligned}
+$$
+where $f_0$ denotes the fit of the posterior to the hypothesis of interest, $c_0$ denotes the complexity of the hypothesis of interest, $X$ denotes the data, and $\pi_0$ denotes the prior distribution of the parameters under the null hypothesis.
+Given our normal approximation and the definition of the fractional adjusted Bayes factor, the prior is given by
+$$
+\pi_0 = \mathcal{N}
+\Big(\mu_0 | \mu_0, \frac{1}{b} \frac{\hat{\sigma}^2}{N}\Big),
+$$
+where $b$ is the fraction of information in the data used to specify the prior distribution, and $\hat{\sigma}^2$ is the unbiased estimate of the variance of the data.
+For the one-sample $t$-test, we set $b = \frac{1}{N}$, such that we have
+$$
+\pi_0 = \mathcal{N}(\mu_0 | \mu_0, \hat{\sigma}^2).
+$$
+Additionally, the posterior distribution is given by
+$$
+\pi = \mathcal{N}\Big(\mu_0 | \hat{\mu},  \frac{\hat{\sigma}^2}{N}\Big).
+$$
+Without loss of generality, we can standardize the data to the hypothesized mean and divide by the standard error $\frac{\hat{\sigma}}{\sqrt{N}}$, such that we have
+$$
+\begin{aligned}
+\pi_0 &= \mathcal{N}(0|0, N), \\
+\pi &= \mathcal{N}(0 | \tilde{\mu}, 1),
+\end{aligned}
+$$
+where $\tilde{\mu} = \frac{\hat{\mu} - \mu_0}{\hat{\sigma}/\sqrt{N}}$.
+
+Consider the following example, where we have a sample of size $N = 20$ from a normal distribution with mean $\mu = 0.5$ and standard deviation $\sigma = 1$. We are interested in testing the null hypothesis $H_0: \mu = 0$ against the alternative hypothesis $H_1: \mu \neq 0$. The Bayes factor is given by
+$$
+BF_{0,u} = \frac{
+\frac{1}{\sqrt{2\pi\frac{\hat{\sigma}^2}{N}}}
+\exp \Big\{-\frac{(\hat{\mu} - \mu_0)^2}{2\frac{\hat{\sigma}^2}{N}} \Big\}
+}{
+\frac{1}{\sqrt{2\pi\sigma^2}}
+\exp \Big\{-\frac{(\mu_0-\mu_0)^2}{2\hat{\sigma}^2} \Big\}
+}.
+$$
+
+```{r}
+set.seed(1)
+n <- 20
+mu <- 0.5
+sd <- 1
+x <- rnorm(n, mu, sd)
+(mux <- mean(x))
+(sdx <- sd(x))
+
+fit <- bain::t_test(x)
+bain::bain(fit, "x=0")
+
+f0 <- 1 / sqrt(2 * pi * sdx^2 / n) * exp(-mux^2 / (2 * sdx^2 / n))
+c0 <- 1 / sqrt(2 * pi * sdx^2) * exp(-0^2 / (2 * sdx^2))
+
+f0 / c0
+
+# of course, we can also make use of the in-build functionality
+dnorm(mux, 0, sdx / sqrt(n)) / dnorm(0, 0, sdx)
+```
+
+Now, simplifying terms, we obtain
+$$ 
+\begin{aligned}
+BF_{0,u} &= \frac{
+\frac{1}{\sqrt{2\pi}}
+\exp \Big\{-\frac{\tilde{\mu}^2}{2} \Big\}
+}{
+\frac{1}{\sqrt{2\pi n}}
+} \\
+&= \sqrt{n} \exp \Big\{-\frac{\tilde{\mu}^2}{2} \Big\}.
+\end{aligned}
+$$
+
+```{r}
+mutilde <- mux / (sdx/sqrt(n))
+f0 <- 1 / sqrt(2 * pi) * exp(-mutilde^2 / 2)
+c0 <- 1 / sqrt(2 * pi * n)
+f0/c0
+
+sqrt(n) * exp(-mutilde^2/2)
+```
+
+Now, it is easy see that the Bayes factor is only a function of the scaled sample mean. Moreover, we can recognize a scaled standard normal distribution, where the scaling is equal to the square root of the sample size multiplied with $\sqrt{2\pi}$. 
+Hence, for every sample size, it is easy to calculate the probability of the Bayes factor being smaller than a certain value (I guess, but not for me at the moment).
+
+For any given sample size $n$, the probability that the Bayes factor is smaller than a certain value $x$ (smaller, in this case, since we are interested in evidence against the null hypothesis, whereas the Bayes factor above is given in terms of evidence for the null hypothesis) is given by
+```{r}
+sqrt(n) * sqrt(2*pi) * dnorm(mutilde)
+```
+
+
