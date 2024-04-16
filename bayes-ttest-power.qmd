@@ -3,8 +3,8 @@ title: "Power Bayesian one-sample t-test"
 format: html
 ---
 
-We consider the case of a one-sample $t$-test. To fix notation, let $X_1, \ldots, X_n$ be a sample of size $N$ from a normal distribution with unknown mean $\mu$ and unknown variance $\sigma^2$. We are interested in testing the null hypothesis $H_0: \mu = \mu_0$ against the alternative hypothesis $H_1: \mu \neq \mu_0$.
-Moreover, we use the approximate adjusted fractional Bayes factor [AAFBF\; @guetal], which implies that we approximate the posterior distribution of the parameters by a normal distribution with mean and variance equal to the maximum likelihood estimates. 
+We consider the case of a one-sample $t$-test. To fix notation, let $X_1, \ldots, X_n$ be a sample of size $n$ from a normal distribution with unknown mean $\mu$ and unknown variance $\sigma^2$. We are interested in testing the null hypothesis $H_0: \mu = \mu_0$ against the alternative hypothesis $H_1: \mu \neq \mu_0$.
+Moreover, we use the approximate adjusted fractional Bayes factor (AAFBF; [Gu, Mulder & Hoijtink, 2017](https://bpspsychub.onlinelibrary.wiley.com/doi/full/10.1111/bmsp.12110)), which implies that we approximate the posterior distribution of the parameters by a normal distribution with mean and variance equal to the (unbiased) maximum likelihood estimates. 
 Using this method, the Bayes factor is given by
 $$
 \begin{aligned}
@@ -16,31 +16,31 @@ where $f_0$ denotes the fit of the posterior to the hypothesis of interest, $c_0
 Given our normal approximation and the definition of the fractional adjusted Bayes factor, the prior is given by
 $$
 \pi_0 = \mathcal{N}
-\Big(\mu_0 | \mu_0, \frac{1}{b} \frac{\hat{\sigma}^2}{N}\Big),
+\Big(\mu_0, \frac{1}{b} \frac{\hat{\sigma}^2}{n}\Big),
 $$
 where $b$ is the fraction of information in the data used to specify the prior distribution, and $\hat{\sigma}^2$ is the unbiased estimate of the variance of the data.
-For the one-sample $t$-test, we set $b = \frac{1}{N}$, such that we have
+For the one-sample $t$-test, we set $b = \frac{1}{n}$, such that we have
 $$
-\pi_0 = \mathcal{N}(\mu_0 | \mu_0, \hat{\sigma}^2).
+\pi_0 = \mathcal{N}(\mu_0, \hat{\sigma}^2).
 $$
 Additionally, the posterior distribution is given by
 $$
-\pi = \mathcal{N}\Big(\mu_0 | \hat{\mu},  \frac{\hat{\sigma}^2}{N}\Big).
+\pi = \mathcal{N}\Big(\hat{\mu},  \frac{\hat{\sigma}^2}{n}\Big).
 $$
-Without loss of generality, we can standardize the data to the hypothesized mean and divide by the standard error $\frac{\hat{\sigma}}{\sqrt{N}}$, such that we have
+Without loss of generality, we can standardize the data to the hypothesized mean and divide by the standard error $\frac{\hat{\sigma}}{\sqrt{n}}$, such that we have
 $$
 \begin{aligned}
-\pi_0 &= \mathcal{N}(0|0, N), \\
-\pi &= \mathcal{N}(0 | \tilde{\mu}, 1),
+\pi_0 &= \mathcal{N}(0, N), \\
+\pi &= \mathcal{N}(\tilde{\mu}, 1),
 \end{aligned}
 $$
-where $\tilde{\mu} = \frac{\hat{\mu} - \mu_0}{\hat{\sigma}/\sqrt{N}}$.
+where $\tilde{\mu} = \frac{\hat{\mu} - \mu_0}{\hat{\sigma}/\sqrt{n}}$.
 
-Consider the following example, where we have a sample of size $N = 20$ from a normal distribution with mean $\mu = 0.5$ and standard deviation $\sigma = 1$. We are interested in testing the null hypothesis $H_0: \mu = 0$ against the alternative hypothesis $H_1: \mu \neq 0$. The Bayes factor is given by
+Consider the following example, where we have a sample of size $n = 20$ from a normal distribution with mean $\mu = 0$ and standard deviation $\sigma = 1$. We are interested in testing the null hypothesis $H_0: \mu = 0$ against the alternative hypothesis $H_1: \mu \neq 0$. The Bayes factor is given by
 $$
 BF_{0,u} = \frac{
-\frac{1}{\sqrt{2\pi\frac{\hat{\sigma}^2}{N}}}
-\exp \Big\{-\frac{(\hat{\mu} - \mu_0)^2}{2\frac{\hat{\sigma}^2}{N}} \Big\}
+\frac{1}{\sqrt{2\pi\frac{\hat{\sigma}^2}{n}}}
+\exp \Big\{-\frac{(\hat{\mu} - \mu_0)^2}{2\frac{\hat{\sigma}^2}{n}} \Big\}
 }{
 \frac{1}{\sqrt{2\pi\sigma^2}}
 \exp \Big\{-\frac{(\mu_0-\mu_0)^2}{2\hat{\sigma}^2} \Big\}
@@ -48,9 +48,9 @@ BF_{0,u} = \frac{
 $$
 
 ```{r}
-set.seed(1)
+set.seed(123)
 n <- 20
-mu <- 0.5
+mu <- 0
 sd <- 1
 x <- rnorm(n, mu, sd)
 (mux <- mean(x))
@@ -90,12 +90,102 @@ f0/c0
 sqrt(n) * exp(-mutilde^2/2)
 ```
 
-Now, it is easy see that the Bayes factor is only a function of the scaled sample mean. Moreover, we can recognize a scaled standard normal distribution, where the scaling is equal to the square root of the sample size multiplied with $\sqrt{2\pi}$. 
-Hence, for every sample size, it is easy to calculate the probability of the Bayes factor being smaller than a certain value (I guess, but not for me at the moment).
+Now, it is easy see that the Bayes factor is only a function of the scaled sample mean. Moreover, we can recognize a scaled standard normal distribution, where the scaling is equal to the square root of the sample size multiplied with $\sqrt{n2\pi}$. That is, we can obtain the same result by calculating the value of the standard normal density at the location of $\tilde{\mu}$ and multiply it by $\sqrt{n 2 \pi}$.
 
-For any given sample size $n$, the probability that the Bayes factor is smaller than a certain value $x$ (smaller, in this case, since we are interested in evidence against the null hypothesis, whereas the Bayes factor above is given in terms of evidence for the null hypothesis) is given by
 ```{r}
-sqrt(n) * sqrt(2*pi) * dnorm(mutilde)
+dnorm(mutilde) * sqrt(n * 2 * pi)
+```
+This is convenient, because now we can use some results from standard normal theory.
+
+
+## Power of a Bayesian one-sided t-test by simulation
+
+
+To obtain the power of a test with sample size $n$, we need to calculate the 
+probability that the Bayes factor is larger than a certain value $T$. To do this
+we generate `nsim = 100000000` samples of size $n$ from a normal distribution,
+calculate the Bayes factor for the null hypothesis $\mu = 0$ against the
+unconstrained alternative hypothesis, and calculate how often the Bayes factor
+exceeds the critical value $T$. For now, suppose $T = 3$. 
+
+
+```{r}
+library(pbapply)
+
+simfunc <- function(n = 20, mu = 0, sd = 1) {
+  x <- rnorm(n, mu, sd)
+  mu <- mean(x)
+  se <- sqrt(var(x)/n)
+  mutilde <- mu / se
+  BF <- sqrt(n) * exp(-mutilde^2/2)
+  BF
+}
+
+pboptions(type = "timer")
+cl <- parallel::makeCluster(18)
+parallel::clusterExport(cl, "simfunc")
+
+nsim <- 100000000
+
+bfs <- pbreplicate(nsim, simfunc(n=20), cl = cl)
+parallel::stopCluster(cl)
+
+sum(bfs > 3) / nsim
 ```
 
+Hence, the power of the test is approximately $`r round(sum(bfs > 3) / nsim, 3)`$. 
 
+
+## Power of a Bayesian one-sided t-test by analytical calculation
+
+To obtain the power of the Bayesian one-sample t-test analytically, we can make
+use of the fact that the Bayes factor follows a scaled standard normal distribution.
+Using this fact, we can calculate the probability that the Bayes factor is larger
+than the critical value $T = 3$ for any given sample size $n$. 
+
+### A normal approximation
+
+So, assuming $n = 20$,
+the critical value of the Bayes factor $T = 3$ is reached when the standard normal
+density equals $3 / \sqrt{20 \cdot 2 \cdot \pi}$. We can approximate for which value
+of $\tilde{\mu}$ this is the case using the `uniroot()` function in `R`.
+
+
+```{r}
+f <- function(x) {
+  dnorm(x) - 3 / sqrt(n * 2 * pi)
+}
+uniroot(f, c(0, 100), tol = .Machine$double.eps, check.conv = TRUE)
+```
+This value is also given by the following equation:
+$$
+\mu_{\text{critical}} = \pm \sqrt{2 \cdot \log \Big(\frac{\sqrt{20}}{3} \Big)}
+$$
+```{r}
+(mu_critical <- sqrt(2 * log(sqrt(n) / 3)))
+dnorm(mu_critical) * sqrt(n * 2 * pi)
+```
+Now, the only step to take is to calculate the probability that $\tilde{\mu}$
+is smaller than this critical value. Note that if we move further to the tails, 
+the Bayes factor for the null hypothesis becomes smaller. Calculating the 
+probability that $\tilde{\mu}$ stays within the interval 
+$[-\mu_{\text{critical}}, \mu_{\text{critical}}]$ is easily done using the
+`pnorm()` function.
+
+```{r}
+pnorm(mu_critical) - pnorm(-mu_critical)
+```
+
+However, this value does not correspond to the power of the test, because we have
+not accounted for the fact that the variance is unknown. Hence, we overestimated
+the power to some extent. The marginal distribution of the sample mean under a 
+normal distribution with unknown variance actually follows a $t$-distribution 
+with $n-1$ degrees of freedom.
+
+### The exact power using a $t$-distribution
+
+Using this fact, we can calculate the exact power of the test. 
+
+```{r}
+pt(mu_critical, n-1) - pt(-mu_critical, n-1)
+```
