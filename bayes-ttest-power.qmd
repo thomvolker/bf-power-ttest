@@ -3,13 +3,15 @@ title: "Power Bayesian one-sample t-test"
 format: html
 ---
 
+# Bayesian null hypothesis evaluation
+
 We consider the case of a one-sample $t$-test. To fix notation, let $X_1, \ldots, X_n$ be a sample of size $n$ from a normal distribution with unknown mean $\mu$ and unknown variance $\sigma^2$. We are interested in testing the null hypothesis $H_0: \mu = \mu_0$ against the alternative hypothesis $H_1: \mu \neq \mu_0$.
 Moreover, we use the approximate adjusted fractional Bayes factor (AAFBF; [Gu, Mulder & Hoijtink, 2017](https://bpspsychub.onlinelibrary.wiley.com/doi/full/10.1111/bmsp.12110)), which implies that we approximate the posterior distribution of the parameters by a normal distribution with mean and variance equal to the (unbiased) maximum likelihood estimates. 
 Using this method, the Bayes factor is given by
 $$
 \begin{aligned}
 BF_{0,u} &= \frac{f_0}{c_0} \\
-&= \frac{P(\mu = \mu_0 | X)}{P(\mu = \mu_0 | \pi_0)}, 
+&= \frac{P(\mu = \mu_0 | X, \pi_0)}{P(\mu = \mu_0 | \pi_0)}, 
 \end{aligned}
 $$
 where $f_0$ denotes the fit of the posterior to the hypothesis of interest, $c_0$ denotes the complexity of the hypothesis of interest, $X$ denotes the data, and $\pi_0$ denotes the prior distribution of the parameters under the null hypothesis.
@@ -18,8 +20,8 @@ $$
 \pi_0 = \mathcal{N}
 \Big(\mu_0, \frac{1}{b} \frac{\hat{\sigma}^2}{n}\Big),
 $$
-where $b$ is the fraction of information in the data used to specify the prior distribution, and $\hat{\sigma}^2$ is the unbiased estimate of the variance of the data.
-For the one-sample $t$-test, we set $b = \frac{1}{n}$, such that we have
+where $b$ is the fraction of information in the data used to specify the prior distribution, typically specified as $J/n$, and $\hat{\sigma}^2$ is the unbiased estimate of the variance of the data.
+For the one-sample $t$-test, we set $J=1$ and thus $b = \frac{1}{n}$, such that we have
 $$
 \pi_0 = \mathcal{N}(\mu_0, \hat{\sigma}^2).
 $$
@@ -27,25 +29,35 @@ Additionally, the posterior distribution is given by
 $$
 \pi = \mathcal{N}\Big(\hat{\mu},  \frac{\hat{\sigma}^2}{n}\Big).
 $$
-Without loss of generality, we can standardize the data to the hypothesized mean and divide by the standard error $\frac{\hat{\sigma}}{\sqrt{n}}$, such that we have
+Without loss of generality, we can rescale the data by subtracting the hypothesized mean and dividing by the standard error $\frac{\hat{\sigma}}{\sqrt{n}}$, such that we have
 $$
 \begin{aligned}
-\pi_0 &= \mathcal{N}(0, N), \\
+\pi_0 &= \mathcal{N}(0, n), \\
 \pi &= \mathcal{N}(\tilde{\mu}, 1),
 \end{aligned}
 $$
 where $\tilde{\mu} = \frac{\hat{\mu} - \mu_0}{\hat{\sigma}/\sqrt{n}}$.
 
-Consider the following example, where we have a sample of size $n = 20$ from a normal distribution with mean $\mu = 0$ and standard deviation $\sigma = 1$. We are interested in testing the null hypothesis $H_0: \mu = 0$ against the alternative hypothesis $H_1: \mu \neq 0$. The Bayes factor is given by
+Accordingly, the approximate adjusted fractional Bayes factor is given by
 $$
-BF_{0,u} = \frac{
+\begin{aligned}
+BF_{0,u} &= \frac{
 \frac{1}{\sqrt{2\pi\frac{\hat{\sigma}^2}{n}}}
 \exp \Big\{-\frac{(\hat{\mu} - \mu_0)^2}{2\frac{\hat{\sigma}^2}{n}} \Big\}
 }{
-\frac{1}{\sqrt{2\pi\sigma^2}}
+\frac{1}{\sqrt{2\pi\hat{\sigma}^2}}
 \exp \Big\{-\frac{(\mu_0-\mu_0)^2}{2\hat{\sigma}^2} \Big\}
-}.
-$$
+} \\
+&= \frac{
+\frac{1}{\sqrt{2\pi}} \exp \Big\{-\frac{\tilde{\mu}^2}{2} \Big\}
+}{
+\frac{1}{\sqrt{2 \pi n}}
+} \\
+&= \sqrt{n} \exp \Big\{-\frac{\tilde{\mu}^2}{2} \Big\}.
+\end{aligned}
+$$ {#eq-bf-simple}
+
+To show this, consider the following example, where we have a sample of size $n = 20$ drawn from a normal distribution with mean $\mu = 0$ and standard deviation $\sigma = 1$. We are interested in testing the null hypothesis $H_0: \mu = 0$ against the alternative hypothesis $H_1: \mu \neq 0$. 
 
 ```{r}
 set.seed(123)
@@ -56,30 +68,22 @@ x <- rnorm(n, mu, sd)
 (mux <- mean(x))
 (sdx <- sd(x))
 
+J <- 1
+
 fit <- bain::t_test(x)
-bain::bain(fit, "x=0")
+bain::bain(fit, "x=0", fraction = J)
 
 f0 <- 1 / sqrt(2 * pi * sdx^2 / n) * exp(-mux^2 / (2 * sdx^2 / n))
-c0 <- 1 / sqrt(2 * pi * sdx^2) * exp(-0^2 / (2 * sdx^2))
+c0 <- 1 / sqrt(2 * pi * sdx^2/J) * exp(-0^2 / (2 * sdx^2/J))
 
 f0 / c0
 
 # of course, we can also make use of the in-build functionality
-dnorm(mux, 0, sdx / sqrt(n)) / dnorm(0, 0, sdx)
+dnorm(mux, 0, sdx / sqrt(n)) / dnorm(0, 0, sdx/J)
 ```
 
-Now, simplifying terms, we obtain
-$$ 
-\begin{aligned}
-BF_{0,u} &= \frac{
-\frac{1}{\sqrt{2\pi}}
-\exp \Big\{-\frac{\tilde{\mu}^2}{2} \Big\}
-}{
-\frac{1}{\sqrt{2\pi n}}
-} \\
-&= \sqrt{n} \exp \Big\{-\frac{\tilde{\mu}^2}{2} \Big\}.
-\end{aligned}
-$$
+Alternatively, we can use the simplified expression like so.
+
 
 ```{r}
 mutilde <- mux / (sdx/sqrt(n))
@@ -90,102 +94,480 @@ f0/c0
 sqrt(n) * exp(-mutilde^2/2)
 ```
 
-Now, it is easy see that the Bayes factor is only a function of the scaled sample mean. Moreover, we can recognize a scaled standard normal distribution, where the scaling is equal to the square root of the sample size multiplied with $\sqrt{n2\pi}$. That is, we can obtain the same result by calculating the value of the standard normal density at the location of $\tilde{\mu}$ and multiply it by $\sqrt{n 2 \pi}$.
-
-```{r}
-dnorm(mutilde) * sqrt(n * 2 * pi)
-```
-This is convenient, because now we can use some results from standard normal theory.
-
+It is easy see that the Bayes factor is only a function of the scaled sample mean. 
 
 ## Power of a Bayesian one-sided t-test by simulation
 
 
 To obtain the power of a test with sample size $n$, we need to calculate the 
-probability that the Bayes factor is larger than a certain value $T$. To do this
+probability that the Bayes factor is larger than a certain value $Q$. To do this
 we generate `nsim = 100000000` samples of size $n$ from a normal distribution,
 calculate the Bayes factor for the null hypothesis $\mu = 0$ against the
 unconstrained alternative hypothesis, and calculate how often the Bayes factor
-exceeds the critical value $T$. For now, suppose $T = 3$. 
+exceeds the critical value $T$. For now, suppose $Q = 3$. 
 
 
 ```{r}
 library(pbapply)
 
-simfunc <- function(n = 20, mu = 0, sd = 1) {
+nsim <- 10000000
+Q <- 3
+
+n   <- 20
+mu  <- 0
+sd  <- 1
+mu0 <- 0
+
+simfunc <- function(n = 20, mu = 0, sd = 1, J = 1, mu0 = 0) {
   x <- rnorm(n, mu, sd)
   mu <- mean(x)
   se <- sqrt(var(x)/n)
-  mutilde <- mu / se
-  BF <- sqrt(n) * exp(-mutilde^2/2)
+  mutilde <- (mu - mu0) / se
+  BF <- sqrt(n/J) * exp(-mutilde^2/2)
   BF
 }
 
 pboptions(type = "timer")
-cl <- parallel::makeCluster(18)
-parallel::clusterExport(cl, "simfunc")
-
-nsim <- 100000000
-
-bfs <- pbreplicate(nsim, simfunc(n=20), cl = cl)
+cl <- parallel::makeCluster(16)
+parallel::clusterExport(cl, c("simfunc", "n", "mu", "sd", "J", "mu0"))
+bfs <- pbreplicate(nsim, simfunc(n = n, mu = mu, sd = sd, mu0 = mu0), cl = cl)
 parallel::stopCluster(cl)
 
-sum(bfs > 3) / nsim
+mean(bfs > Q)
 ```
 
-Hence, the power of the test is approximately $`r round(sum(bfs > 3) / nsim, 3)`$. 
+Hence, the power of the test is approximately $`r round(mean(bfs > Q), 3)`$. 
 
 
 ## Power of a Bayesian one-sided t-test by analytical calculation
 
-To obtain the power of the Bayesian one-sample t-test analytically, we can make
-use of the fact that the Bayes factor follows a scaled standard normal distribution.
-Using this fact, we can calculate the probability that the Bayes factor is larger
-than the critical value $T = 3$ for any given sample size $n$. 
+Now, noting that the Bayes factor only depends on the scaled sample mean, we can calculate the power analytically. Importantly, note that the distribution of the scaled sample mean with unknown variance follows a non-central $t$-distribution with $n-1$ degrees of freedom, and non-centrality parameter $\delta = (\mu - \mu_0) / (\sigma/\sqrt{n})$. This scaling of the non-centrality parameter arises because we center the data to the hypothesized value and scale by it's standard error. Therefore, we have to apply the same scaling to the population mean $\mu$.
+If the variance was known, the distribution would be a normal distribution with mean $\mu / (\sigma/\sqrt{n})$ and standard deviation $1$.
 
-### A normal approximation
+The next step is to calculate for which values of $\tilde{\mu}$ the Bayes factor exceeds the threshold $Q$.
+Per @eq-bf-simple, we have that
+$$
+\begin{aligned}
+Q &\leq \sqrt{n} \exp \Big\{-\frac{\tilde{\mu}^2}{2} \Big\} \\
+\frac{Q}{\sqrt{n}} &\leq \exp \Big\{-\frac{\tilde{\mu}^2}{2} \Big\} \\
+\log \Big(\frac{Q}{\sqrt{n}} \Big) &\leq -\frac{\tilde{\mu}^2}{2} \\
+2 \log \Big(\frac{\sqrt{n}}{Q} \Big) &\leq \tilde{\mu}^2 \\
+\tilde\mu &\in \Bigg[-\sqrt{2 \log \Big(\frac{\sqrt{n}}{Q} \Big)}, \sqrt{2 \log \Big(\frac{\sqrt{n}}{Q} \Big)}\Bigg].
+\end{aligned}
+$$
+Hence, as long as $\tilde\mu$ falls within the interval $\Big[-\sqrt{2 \log \Big(\frac{\sqrt{n}}{Q} \Big)}, \sqrt{2 \log \Big(\frac{\sqrt{n}}{Q} \Big)}\Big]$, the Bayes factor will exceed the threshold $Q$.
 
-So, assuming $n = 20$,
-the critical value of the Bayes factor $T = 3$ is reached when the standard normal
-density equals $3 / \sqrt{20 \cdot 2 \cdot \pi}$. We can approximate for which value
-of $\tilde{\mu}$ this is the case using the `uniroot()` function in `R`.
-
+The final step is to calculate the probability with which the scaled sample mean falls within this interval. This can be done by calculating the cumulative distribution function of the non-central $t$-distribution with $n-1$ degrees of freedom and non-centrality parameter $\delta = \mu / (\sigma/\sqrt{n})$ at the upper and lower bounds of the interval defined by $\mu_\text{critical}$.
 
 ```{r}
-f <- function(x) {
-  dnorm(x) - 3 / sqrt(n * 2 * pi)
+mu_critical <- sqrt(2 * log(sqrt(n) / Q))
+delta <- (0 - 0) / (1/sqrt(n))
+
+pt(mu_critical, n-1, delta) - pt(-mu_critical, n-1, delta)
+```
+
+## A normal approximation
+
+In case the distribution of the statistic of interest is not known exactly, but can be approximated by a normal distribution, we can also use the cumulative normal distribution function. Note that this would not alter the critical value of the sample mean $\mu_\text{critical}$, but solely alters the sampling distribution of the mean. In this case, we would have that the scaled sample mean follows a normal distribution with mean $\mu / (\sigma/\sqrt{n})$ and standard deviation $1$. 
+
+```{r}
+pnorm(mu_critical, delta, sd) - pnorm(-mu_critical, delta, sd)
+```
+
+## The power for any $J$
+
+So far, we assumed that $J = 1$, and thus the fraction of information used in the training data equals $b = \frac{1}{n}$. However, using a different value for $J$ would yield a different Bayes factor value. Hence, this value alters the calculation of the critical value $Q$, but not the sampling distribution of the mean. Moreover, the value of $J$ only alters the prior distribution, which then yields
+$$
+\pi_0 = \mathcal{N}
+\Big(\mu_0, \frac{\hat{\sigma}^2}{J}\Big).
+$$
+Accordingly, the Bayes factor equals
+$$
+\begin{aligned}
+BF_{0,u} &= \frac{
+\frac{1}{\sqrt{2\pi\frac{\hat{\sigma}^2}{n}}}
+\exp \Big\{-\frac{(\hat{\mu} - \mu_0)^2}{2\frac{\hat{\sigma}^2}{n}} \Big\}
+}{
+\frac{1}{\sqrt{2\pi\hat{\sigma}^2/J}}
+\exp \Big\{-\frac{(\mu_0-\mu_0)^2}{2\frac{\hat{\sigma}^2}{J}} \Big\}
+} \\
+&= \frac{
+\frac{1}{\sqrt{2\pi}} \exp \Big\{-\frac{\tilde{\mu}^2}{2} \Big\}
+}{
+\frac{1}{\sqrt{2\pi \frac{n}{J}}}
+} \\
+&= \sqrt{\frac{n}{J}} \exp \Big\{-\frac{\tilde{\mu}^2}{2} \Big\},
+\end{aligned}
+$$ {#eq-bf-simple-J}
+and we can define the critical value of the scaled sample mean as $\mu_\text{critical}$ for which the Bayes factor exceeds $Q$ as
+$$
+\begin{aligned}
+Q &\leq \sqrt{\frac{n}{J}} \exp \Big\{-\frac{\tilde{\mu}^2}{2} \Big\} \\
+\frac{Q}{\sqrt{n/J}} &\leq \exp \Big\{-\frac{\tilde{\mu}^2}{2} \Big\} \\
+\log \Big(\frac{Q}{\sqrt{n/J}} \Big) &\leq -\frac{\tilde{\mu}^2}{2} \\
+2 \log \Big(\frac{\sqrt{n/J}}{Q} \Big) &\leq \tilde{\mu}^2 \\
+\tilde\mu &\in \Bigg[-\sqrt{2 \log \Big(\frac{\sqrt{n/J}}{Q} \Big)}, \sqrt{2 \log \Big(\frac{\sqrt{n/J}}{Q} \Big)}\Bigg].
+\end{aligned}
+$$
+
+
+## Examples
+
+### The BFpower function
+
+Compiling the above equations in a single `R` function yields the following code.
+
+```{r}
+BFpower <- function(n, mu, sd, J, mu0, Q) {
+  mu_critical <- sqrt(2 * log(sqrt(n/J) / Q))
+  delta <- (mu - mu0) / (sd/sqrt(n))
+  p <- pt(mu_critical, n-1, delta) - pt(-mu_critical, n-1, delta)
+  return(p)
 }
-uniroot(f, c(0, 100), tol = .Machine$double.eps, check.conv = TRUE)
 ```
-This value is also given by the following equation:
+
+### Changing $J$
+
+Increasing $J$, we put a more informative prior on the parameter of interest. Accordingly, the Bayes factor in favor of the null hypothesis decreases. This is because the prior distribution is more concentrated around the null hypothesis, and thus the data are more likely to provide evidence against the null hypothesis compared to our a priori beliefs.
+
+
+```{r}
+Q <- 3
+n   <- 20
+J   <- 2
+mu  <- 0
+sd  <- 1
+mu0 <- 0
+
+cl <- parallel::makeCluster(16)
+parallel::clusterExport(cl, c("simfunc", "n", "mu", "sd", "J", "mu0"))
+bfs <- pbreplicate(nsim, simfunc(n = n, mu = mu, sd = sd, J = J, mu0 = mu0), cl = cl)
+parallel::stopCluster(cl)
+
+mean(bfs > Q)
+BFpower(n, mu, sd, J, mu0, Q)
+```
+
+We indeed observe that the power for finding a Bayes factor that exceeds the threshold $Q \geq 3$ is smaller when $J = 2$ compared to $J = 1$.
+
+### Changing $Q$, $n$, $\mu$ and $\sigma$
+
+```{r}
+Q   <- 2
+n   <- 30
+mu  <- 1
+sd  <- 2
+mu0 <- 0
+
+cl <- parallel::makeCluster(16)
+parallel::clusterExport(cl, c("simfunc", "n", "mu", "sd", "J", "mu0"))
+bfs <- pbreplicate(nsim, simfunc(n = n, mu = mu, sd = sd, J = J, mu0 = mu0), cl = cl)
+parallel::stopCluster(cl)
+
+mean(bfs > Q)
+BFpower(n, mu, sd, J, mu0, Q)
+```
+
+
+### Changing the hypothesized value $\mu_0$
+
+```{r}
+Q   <- 2
+n   <- 30
+mu  <- 1
+sd  <- 2
+mu0 <- 1
+
+cl <- parallel::makeCluster(16)
+parallel::clusterExport(cl, c("simfunc", "n", "mu", "sd", "J", "mu0"))
+bfs <- pbreplicate(nsim, simfunc(n = n, mu = mu, sd = sd, J = J, mu0 = mu0), cl = cl)
+parallel::stopCluster(cl)
+
+mean(bfs > Q)
+BFpower(n, mu, sd, J, mu0, Q)
+```
+
+
+
+# Bayesian informative hypothesis evaluation
+
+To evaluate the power of an informative hypothesis against the unconstrained hypothesis, we can use a similar approach. However, if the informative hypothesis of interest is an inequality-constrained hypothesis, the Bayes factor is defined in a slightly different way. In this case, we can make use of the encompassing prior approach put forward by [Klugkist et al. (2005)](https://psycnet.apa.org/record/2005-16136-009). Under this set-up, the Bayes factor for the inequality-constrained hypothesis evaluated against the unconstrained hypothesis is given by
 $$
-\mu_{\text{critical}} = \pm \sqrt{2 \cdot \log \Big(\frac{\sqrt{20}}{3} \Big)}
+\begin{aligned}
+BF_{i,u} &= \frac{f_i}{c_i} \\
+&= 
+\frac{
+\int_{\mu \in M_i} \pi(\mu|X)
+}{
+\int_{\mu \in M_i} \pi_0(\mu)
+},
+\end{aligned}
 $$
-```{r}
-(mu_critical <- sqrt(2 * log(sqrt(n) / 3)))
-dnorm(mu_critical) * sqrt(n * 2 * pi)
-```
-Now, the only step to take is to calculate the probability that $\tilde{\mu}$
-is smaller than this critical value. Note that if we move further to the tails, 
-the Bayes factor for the null hypothesis becomes smaller. Calculating the 
-probability that $\tilde{\mu}$ stays within the interval 
-$[-\mu_{\text{critical}}, \mu_{\text{critical}}]$ is easily done using the
-`pnorm()` function.
+where $M_i$ denotes the parameter space under the inequality-constrained hypothesis, $\pi(\mu|X)$ denotes the posterior distribution of the mean given the data (marginalized over the variance), and $\pi_0(\mu)$ denotes the prior distribution of the mean (also marginalized over the variance). 
+
+## Bayesian one-sided hypothesis evaluation
+
+First, assume that the hypothesis of interest is a one-sided hypothesis, in the sense that we consider $H_i: \mu > \mu_0$ or $H_{i'}: \mu < \mu_0$. In this setting, centering the prior distribution at the hypothesized value yields a complexity of $c_i = 0.5$, and thus we have that $BF_{i,u} = 2 \cdot f_i$. From this observation, it follows that the maximum Bayes factor equals $BF_{i,u}^\max=2$, whereas the minimum Bayes factor equals $BF_{i,u}^\min=0$. Moreover, since a normal approximation is used to the posterior distribution of the parameters, we have that
+$$
+\begin{aligned}
+BF_{i,u} &= 2 \int_{\mu \in M_i} 
+\frac{1}{\sqrt{2\pi \frac{\hat\sigma^2}{n}}} 
+\exp \Big\{ -\frac{(\hat\mu - \mu_0)^2}{2 \frac{\hat\sigma^2}{n}} \Big\} d\mu,\\
+&= 2 \int_{\mu \in M_i} \frac{1}{\sqrt{2 \pi}} \exp \Big\{ -\frac{\tilde\mu^2}{2} \Big\} d\mu,\\
+&= 2 \cdot (\Phi(\sup(M_i)) - \Phi(\inf(M_i))),
+\end{aligned}
+$$
+where $\Phi$ denotes the cumulative distribution function of the normal distribution with mean $\tilde\mu$ and variance $1$, and $\sup(M_i)$ and $\inf(M_i)$ denote the upper and lower bounds of the parameter space under the inequality-constrained hypothesis, respectively. Assuming that the hypothesis of interest is $H_i: \mu > x$ or $H_{i'}: \mu < x$, with the prior distribution centered at $x$, we either have that $\Phi(\sup(M_i)) = 1$ or $\Phi(\inf(M_i)) = 0$, respectively. Hence, the critical value for $\tilde\mu$ that corresponds to a Bayes factor of $Q$ is given by
+$$
+\begin{aligned}
+\mu_\text{critical} = \pm \Phi^{-1}(Q/2),
+\end{aligned}
+$$
+where the $\pm$ sign depends on whether the hypothesis of interest is $H_i$ or $H_{i'}$ and $\Phi^{-1}$ denotes the inverse of the cumulative normal distribution.
+The next step is to obtain the power by quantifying the probability that 
+Accordingly, the power of the test is given by the probability that $\tilde\mu > \mu_\text{critical}$. Again, this probability is given by the cumulative distribution function of the non-central $t$-distribution with $n-1$ degrees of freedom and non-centrality parameter $\delta = (\mu-\mu_0)/(\sigma^2/n).
+
 
 ```{r}
-pnorm(mu_critical) - pnorm(-mu_critical)
+Q <- 1.5
+
+simfunc <- function(n, mu = 0, sd = 1, mu0 = 0) {
+  x <- rnorm(n, mu, sd)
+  mux <- mean(x)
+  varx <- var(x)
+  mutilde <- (mux-mu0) / sqrt(varx/n)
+  pnorm(0, mutilde, 1, lower.tail = FALSE) / 
+    pnorm(0, 0, sqrt(n), lower.tail = FALSE)
+}
+
+bain::bain(fit, "x > 0", fraction = J)
+
+mutilde <- (mean(x) - 0) / sqrt(var(x)/length(x))
+pnorm(0, mutilde, 1, lower.tail = FALSE) / 
+  pnorm(0, 0, n, lower.tail = FALSE)
+
+cl <- parallel::makeCluster(16)
+parallel::clusterExport(cl, "simfunc")
+bfs <- pbreplicate(nsim, simfunc(n=10, mu = 0, sd = 1), cl = cl)
+parallel::stopCluster(cl)
+
+mean(bfs > Q)
+
+mu_critical <- qnorm(Q/2, 0)
+pt(Inf, 9, ncp = 0 / (1 / sqrt(10))) - pt(mu_critical, 9, ncp = 0 / (1 / sqrt(10)))
 ```
 
-However, this value does not correspond to the power of the test, because we have
-not accounted for the fact that the variance is unknown. Hence, we overestimated
-the power to some extent. The marginal distribution of the sample mean under a 
-normal distribution with unknown variance actually follows a $t$-distribution 
-with $n-1$ degrees of freedom.
+## Examples
 
-### The exact power using a $t$-distribution
-
-Using this fact, we can calculate the exact power of the test. 
+Using the equations defined above, we can again create a power function for Bayesian one-sided hypothesis evaluation. Note that for these hypotheses, the Bayes factor is defined irrespective of the fraction of information $J$ used to construct the prior. 
 
 ```{r}
-pt(mu_critical, n-1) - pt(-mu_critical, n-1)
+BFpower <- function(n, mu, sd, mu0, Q, alternative = "greater") {
+  mu_critical <- qnorm(Q/2, 0)
+  alternative <- match.arg(alternative, c("greater", "less"))
+  if (alternative == "greater") {
+    pt(mu_critical, n-1, ncp = (mu - mu0) / sqrt(sd^2 / n), lower.tail = FALSE)
+  } else if (alternative == "less") {
+    pt(mu_critical, n-1, ncp = (mu - mu0) / sqrt(sd^2 / n), lower.tail = TRUE)
+  }
+}
 ```
+
+### Changing the Bayes factor threshold
+
+```{r}
+Q <- 1.8
+n <- 10
+mu <- 0
+sd <- 1
+mu0 <- 0
+
+cl <- parallel::makeCluster(16)
+parallel::clusterExport(cl, c("simfunc", "Q", "n", "mu", "sd", "mu0"))
+bfs <- pbreplicate(nsim, simfunc(n = n, mu = mu, sd = sd, mu0 = mu0), cl = cl)
+parallel::stopCluster(cl)
+
+mean(bfs > Q)
+BFpower(n, mu, sd, mu0, Q, "greater")
+
+Q <- 0.1
+mean(bfs < Q)
+BFpower(n, mu, sd, mu0, Q, "less")
+```
+
+### Changing $n$, $\mu$, $\sigma$ and $\mu_0$
+
+```{r}
+Q   <- 1.5
+n   <- 30
+mu  <- 0.5
+sd  <- 2
+mu0 <- 0.1
+
+cl <- parallel::makeCluster(16)
+parallel::clusterExport(cl, c("simfunc", "Q", "n", "mu", "sd", "mu0"))
+bfs <- pbreplicate(nsim, simfunc(n = n, mu = mu, sd = sd, mu0 = mu0), cl = cl)
+parallel::stopCluster(cl)
+
+mean(bfs > Q)
+BFpower(n, mu, sd, mu0, Q, "greater")
+```
+
+# Loose ends
+
+Now we have defined Bayes power analysis for the one-sample $t$-test under the approximate adjusted Bayes factor set-up. However, there are some loose ends that still need to be tied up.
+
+1. How can we calculate the power of the Bayes factor when the informative hypothesis of interest is a range hypothesis? Under the current set-up, the scaled sample mean changes as a function of the sample size. I'm assuming it is straightforward to scale the sampling distribution of the mean accordingly, but this is to be investigated.
+2. More importantly is the question how to calculate the power of the Bayes factor when two informative hypotheses are evaluated against each other. Currently, we only evaluated against the unconstrained hypothesis. This is a more difficult problem, as we have to take into account that the Bayes factor is dependent on quantities in both the numerator and the denominator. This problem should solely affect the calculation of the critical value, which can always be done approximately, by using the `uniroot()` function in `R`.
+3. We have not yet investigated the power of the Bayes factor under a multi-parameter set-up. Yet, this is possible using a (non-central) $\chi^2$-distribution or a (non-central) $F$-distribution.
+
+<!-- # Power of a Bayesian two-sample t-test -->
+
+<!-- Now, consider the situation that we have two samples $\{X_i^{(1)}\}_{i=1}^{n_1}$ and $\{X_j^{(2)}\}_{j=1}^{n_2}$, one of size $n_1$ and one of size $n_2$. Let's assume that $n_1 = n_2$ for simplicity. Moreover, assume that we want to calculate the Bayes factor for the null hypothesis that the means of the two samples are equal, against the alternative hypotheses that the means are not equal. That is, we have $\mathcal{H}_0: \mu_1 = \mu_2$ and $\mathcal{H}_1: \mu_1 \neq \mu_2$. For the time being, also assume that they have the same variance.  -->
+
+<!-- Accordingly, we can again use the Savage-Dickey density ratio to calculate the Bayes factor, but now using a multivariate normal distribution. Hence, under the set-up of the approximate adjusted fractional Bayes factor, we have that the Bayes factor is given by -->
+
+<!-- $$ -->
+<!-- \begin{aligned} -->
+<!-- BF_{0,1} &= \frac{P(\mu_1 = \mu_2 | X)}{P(\mu_1 = \mu_2 | \pi_0)} -->
+<!-- \end{aligned} -->
+<!-- $$ -->
+
+<!-- ```{r} -->
+<!-- set.seed(1) -->
+
+<!-- n1 <- 20 -->
+<!-- n2 <- 20 -->
+
+<!-- mu1 <- 0 -->
+<!-- mu2 <- 1 -->
+
+<!-- sigma1 <- 1 -->
+<!-- sigma2 <- 1 -->
+
+<!-- x1 <- rnorm(n1, mu1, sigma1) -->
+<!-- x2 <- rnorm(n2, mu2, sigma2) -->
+
+<!-- fit <- bain::t_test(x2, x1, var.equal = TRUE) -->
+
+<!-- bf <- bain::bain(fit, 'x = y', fraction = 2) -->
+<!-- bf -->
+
+<!-- sp <- sqrt((n1 - 1)*var(x1) + (n2 - 1)*var(x2)) / sqrt(n1 + n2 - 2) -->
+
+<!-- dnorm(0, mean(x2) - mean(x1), sp * sqrt(1/n1 + 1/n2)) / -->
+<!--   dnorm(0, 0, sp / 3) -->
+<!-- ``` -->
+
+
+<!-- ## Sketch of the approach to take -->
+
+<!-- Find the radius of the ellipsoid that corresponds to the critical value of the Bayes factor. Then, calculate the probability that the sample mean falls within this ellipsoid (and note that the sample mean follows a multivariate $t$ distribution). -->
+
+<!-- ```{r} -->
+<!-- n <- 1000 -->
+<!-- mu <- c(1,2) -->
+<!-- sigma <- diag(c(1,2) - 0.5) + 0.5  -->
+
+<!-- x <- matrix(rnorm(n*2), n) %*% chol(sigma) + matrix(mu, n, 2, byrow = TRUE) -->
+
+<!-- library(ggplot2) -->
+
+<!-- angles <- (0:256) * 2 * pi / 256 -->
+<!-- unit.circle <- cbind(cos(angles), sin(angles)) -->
+<!-- ellipse <- t(c(0, 0) + 1 * t(unit.circle %*% chol(J * sigma))) -->
+
+<!-- data.frame(x) |> -->
+<!--   ggplot(aes(x = X1, y = X2)) + -->
+<!--   geom_point() + -->
+<!--   stat_density2d() + -->
+<!--   geom_path(data = data.frame(ellipse), col = "orange") -->
+
+<!-- ``` -->
+
+<!-- For calculation of the ellipse, see  -->
+<!-- [https://ggplot2.tidyverse.org/reference/stat_ellipse.html](https://ggplot2.tidyverse.org/reference/stat_ellipse.html) -->
+
+<!-- For some notes on the geometry of the multivariate Gaussian distribution, see -->
+<!-- [chrome-extension://oemmndcbldboiebfnladdacbdfmadadm/https://cs229.stanford.edu/section/gaussians.pdf](chrome-extension://oemmndcbldboiebfnladdacbdfmadadm/https://cs229.stanford.edu/section/gaussians.pdf) -->
+
+<!-- And for some notes on the numerical computation of multivariate normal and multivariate $t$ probabilities over ellipsoidal regions, see [chrome-extension://oemmndcbldboiebfnladdacbdfmadadm/file:///C:/Users/5868777/AppData/Local/Google/Chrome/Downloads/jss2r.pdf](chrome-extension://oemmndcbldboiebfnladdacbdfmadadm/file:///C:/Users/5868777/AppData/Local/Google/Chrome/Downloads/jss2r.pdf) -->
+
+<!-- Other links: -->
+
+<!-- - [https://www.visiondummy.com/2014/04/draw-error-ellipse-representing-covariance-matrix/#comment-190](https://www.visiondummy.com/2014/04/draw-error-ellipse-representing-covariance-matrix/#comment-190) -->
+
+<!-- ```{r} -->
+<!-- n <- 10000 -->
+<!-- mu <- c(1,2) -->
+<!-- sigma <- diag(c(1,2) - 0.5) + 0.5 -->
+
+<!-- X <- mvtnorm::rmvnorm(n = n, mean = mu, sigma = sigma) -->
+<!-- var(X) -->
+<!-- colMeans(X) -->
+
+<!-- C <- X - t(colMeans(X)) %x% rep(1, n) -->
+<!-- S <- C %*% solve(chol(var(C))) -->
+
+<!-- all.equal(X, S %*% chol(var(C)) + t(colMeans(X)) %x% rep(1, n)) -->
+<!-- ``` -->
+
+
+
+<!-- ```{r} -->
+
+<!-- fx <- function(x, mu, sigma) { -->
+<!--   k <- length(mu) -->
+<!--   exp(-t(x-mu) %*% solve(sigma) %*% (x-mu) / 2) / sqrt((2*pi)^k * det(sigma)) -->
+<!-- } -->
+
+<!-- fx(c(1,2), mu, sigma) -->
+<!-- mvtnorm::dmvnorm(c(1,2), mu, sigma) -->
+
+<!-- t(c(2,0)) %*% solve(sigma) %*% c(2,0) -->
+<!-- eigen(sigma) -->
+<!-- ``` -->
+
+<!-- ### Forming the hyperellipse around $\mathbf{0}_p$ -->
+
+<!-- ```{r} -->
+<!-- set.seed(1) -->
+<!-- P <- 3 -->
+<!-- N <- 10000000 -->
+<!-- S <- 0.7 + 0.3 * diag(P) -->
+<!-- M <- rep(0, P) -->
+<!-- # X <- mvtnorm::rmvt(N, sigma = S, delta = M, df = 10-P) -->
+<!-- # For normal distribution, uncomment the following two lines -->
+<!-- X <- rnorm(N*P) |> matrix(N) %*% chol(0.7 + 0.3 * diag(P)) -->
+<!-- X <- X + t(M) %x% rep(1, N) -->
+<!-- rgl::plot3d(X, xlim = c(-10,10), ylim = c(-10,10), zlim = c(-10,10)) -->
+<!-- #rgl::text3d(X, texts = 1:N, add = TRUE) -->
+<!-- rgl::plot3d(rgl::ellipse3d(var(X), subdivide = 2^2), col = "seagreen", alpha = 0.3, add = TRUE) -->
+
+<!-- E <- eigen(var(X)) -->
+<!-- E <- eigen(S) -->
+<!-- #XC <- X - t(colMeans(X)) %x% rep(1, N) -->
+<!-- XC <- X -->
+<!-- C <- qchisq(0.95, P) -->
+<!-- #C <- 3 * qf(0.95, P, 10-P, ncp = 0) -->
+<!-- C -->
+<!-- #C <- 1 -->
+<!-- W <- diag(1 / sqrt(C * E$values)) %*% t(E$vectors) -->
+
+<!-- mean(colSums((W %*% t(XC))^2) < 1) -->
+<!-- pchisq(1, 0.95, P) -->
+
+<!-- shotGroups::pmvnEll(sqrt(C), sigma = 0.7 + 0.3 * diag(P), mu = M,  -->
+<!--                     e = solve(0.7 + 0.3 * diag(P)), x0 = rep(0,P)) -->
+
+<!-- mvtnorm::qmvnorm(0.95, mean = rep(0,P), sigma = 0.7 + 0.3 * diag(P),  -->
+<!--                  lower = rep(-Inf, P), upper = rep(Inf, P)) -->
+
+<!-- mvtnorm::pmvnorm(-2, 2, mean = rep(0,P), sigma = 0.7 + 0.3 * diag(P), -->
+<!--                  ) -->
+
+<!-- L <- t(chol(S)) -->
+<!-- E2 <- eigen(L %*% S %*% t(L)) -->
+<!-- t(E2$vectors) %*% solve(L) %*% rep(0, P) -->
+<!-- ``` -->
+

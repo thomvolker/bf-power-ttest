@@ -96,33 +96,44 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 </header>
 
+<section id="bayesian-null-hypothesis-evaluation" class="level1">
+<h1>Bayesian null hypothesis evaluation</h1>
 <p>We consider the case of a one-sample <span class="math inline">\(t\)</span>-test. To fix notation, let <span class="math inline">\(X_1, \ldots, X_n\)</span> be a sample of size <span class="math inline">\(n\)</span> from a normal distribution with unknown mean <span class="math inline">\(\mu\)</span> and unknown variance <span class="math inline">\(\sigma^2\)</span>. We are interested in testing the null hypothesis <span class="math inline">\(H_0: \mu = \mu_0\)</span> against the alternative hypothesis <span class="math inline">\(H_1: \mu \neq \mu_0\)</span>. Moreover, we use the approximate adjusted fractional Bayes factor (AAFBF; <a href="https://bpspsychub.onlinelibrary.wiley.com/doi/full/10.1111/bmsp.12110">Gu, Mulder &amp; Hoijtink, 2017</a>), which implies that we approximate the posterior distribution of the parameters by a normal distribution with mean and variance equal to the (unbiased) maximum likelihood estimates. Using this method, the Bayes factor is given by <span class="math display">\[
 \begin{aligned}
 BF_{0,u} &amp;= \frac{f_0}{c_0} \\
-&amp;= \frac{P(\mu = \mu_0 | X)}{P(\mu = \mu_0 | \pi_0)},
+&amp;= \frac{P(\mu = \mu_0 | X, \pi_0)}{P(\mu = \mu_0 | \pi_0)},
 \end{aligned}
 \]</span> where <span class="math inline">\(f_0\)</span> denotes the fit of the posterior to the hypothesis of interest, <span class="math inline">\(c_0\)</span> denotes the complexity of the hypothesis of interest, <span class="math inline">\(X\)</span> denotes the data, and <span class="math inline">\(\pi_0\)</span> denotes the prior distribution of the parameters under the null hypothesis. Given our normal approximation and the definition of the fractional adjusted Bayes factor, the prior is given by <span class="math display">\[
 \pi_0 = \mathcal{N}
 \Big(\mu_0, \frac{1}{b} \frac{\hat{\sigma}^2}{n}\Big),
-\]</span> where <span class="math inline">\(b\)</span> is the fraction of information in the data used to specify the prior distribution, and <span class="math inline">\(\hat{\sigma}^2\)</span> is the unbiased estimate of the variance of the data. For the one-sample <span class="math inline">\(t\)</span>-test, we set <span class="math inline">\(b = \frac{1}{n}\)</span>, such that we have <span class="math display">\[
+\]</span> where <span class="math inline">\(b\)</span> is the fraction of information in the data used to specify the prior distribution, typically specified as <span class="math inline">\(J/n\)</span>, and <span class="math inline">\(\hat{\sigma}^2\)</span> is the unbiased estimate of the variance of the data. For the one-sample <span class="math inline">\(t\)</span>-test, we set <span class="math inline">\(J=1\)</span> and thus <span class="math inline">\(b = \frac{1}{n}\)</span>, such that we have <span class="math display">\[
 \pi_0 = \mathcal{N}(\mu_0, \hat{\sigma}^2).
 \]</span> Additionally, the posterior distribution is given by <span class="math display">\[
 \pi = \mathcal{N}\Big(\hat{\mu},  \frac{\hat{\sigma}^2}{n}\Big).
-\]</span> Without loss of generality, we can standardize the data to the hypothesized mean and divide by the standard error <span class="math inline">\(\frac{\hat{\sigma}}{\sqrt{n}}\)</span>, such that we have <span class="math display">\[
+\]</span> Without loss of generality, we can rescale the data by subtracting the hypothesized mean and dividing by the standard error <span class="math inline">\(\frac{\hat{\sigma}}{\sqrt{n}}\)</span>, such that we have <span class="math display">\[
 \begin{aligned}
-\pi_0 &amp;= \mathcal{N}(0, N), \\
+\pi_0 &amp;= \mathcal{N}(0, n), \\
 \pi &amp;= \mathcal{N}(\tilde{\mu}, 1),
 \end{aligned}
 \]</span> where <span class="math inline">\(\tilde{\mu} = \frac{\hat{\mu} - \mu_0}{\hat{\sigma}/\sqrt{n}}\)</span>.</p>
-<p>Consider the following example, where we have a sample of size <span class="math inline">\(n = 20\)</span> from a normal distribution with mean <span class="math inline">\(\mu = 0\)</span> and standard deviation <span class="math inline">\(\sigma = 1\)</span>. We are interested in testing the null hypothesis <span class="math inline">\(H_0: \mu = 0\)</span> against the alternative hypothesis <span class="math inline">\(H_1: \mu \neq 0\)</span>. The Bayes factor is given by <span class="math display">\[
-BF_{0,u} = \frac{
+<p>Accordingly, the approximate adjusted fractional Bayes factor is given by <span id="eq-bf-simple"><span class="math display">\[
+\begin{aligned}
+BF_{0,u} &amp;= \frac{
 \frac{1}{\sqrt{2\pi\frac{\hat{\sigma}^2}{n}}}
 \exp \Big\{-\frac{(\hat{\mu} - \mu_0)^2}{2\frac{\hat{\sigma}^2}{n}} \Big\}
 }{
-\frac{1}{\sqrt{2\pi\sigma^2}}
+\frac{1}{\sqrt{2\pi\hat{\sigma}^2}}
 \exp \Big\{-\frac{(\mu_0-\mu_0)^2}{2\hat{\sigma}^2} \Big\}
-}.
-\]</span></p>
+} \\
+&amp;= \frac{
+\frac{1}{\sqrt{2\pi}} \exp \Big\{-\frac{\tilde{\mu}^2}{2} \Big\}
+}{
+\frac{1}{\sqrt{2 \pi n}}
+} \\
+&amp;= \sqrt{n} \exp \Big\{-\frac{\tilde{\mu}^2}{2} \Big\}.
+\end{aligned}
+\tag{1}\]</span></span></p>
+<p>To show this, consider the following example, where we have a sample of size <span class="math inline">\(n = 20\)</span> drawn from a normal distribution with mean <span class="math inline">\(\mu = 0\)</span> and standard deviation <span class="math inline">\(\sigma = 1\)</span>. We are interested in testing the null hypothesis <span class="math inline">\(H_0: \mu = 0\)</span> against the alternative hypothesis <span class="math inline">\(H_1: \mu \neq 0\)</span>.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>n <span class="ot">&lt;-</span> <span class="dv">20</span></span>
@@ -137,8 +148,10 @@ BF_{0,u} = \frac{
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] 0.9726653</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>fit <span class="ot">&lt;-</span> bain<span class="sc">::</span><span class="fu">t_test</span>(x)</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>bain<span class="sc">::</span><span class="fu">bain</span>(fit, <span class="st">"x=0"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>J <span class="ot">&lt;-</span> <span class="dv">1</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>fit <span class="ot">&lt;-</span> bain<span class="sc">::</span><span class="fu">t_test</span>(x)</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>bain<span class="sc">::</span><span class="fu">bain</span>(fit, <span class="st">"x=0"</span>, <span class="at">fraction =</span> J)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Bayesian informative hypothesis testing for an object of class t_test:
 
@@ -153,29 +166,19 @@ Hypotheses:
 Note: BF.u denotes the Bayes factor of the hypothesis at hand versus the unconstrained hypothesis Hu. BF.c denotes the Bayes factor of the hypothesis at hand versus its complement. PMPa contains the posterior model probabilities of the hypotheses specified. PMPb adds Hu, the unconstrained hypothesis. PMPc adds Hc, the complement of the union of the hypotheses specified.</code></pre>
 </div>
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>f0 <span class="ot">&lt;-</span> <span class="dv">1</span> <span class="sc">/</span> <span class="fu">sqrt</span>(<span class="dv">2</span> <span class="sc">*</span> pi <span class="sc">*</span> sdx<span class="sc">^</span><span class="dv">2</span> <span class="sc">/</span> n) <span class="sc">*</span> <span class="fu">exp</span>(<span class="sc">-</span>mux<span class="sc">^</span><span class="dv">2</span> <span class="sc">/</span> (<span class="dv">2</span> <span class="sc">*</span> sdx<span class="sc">^</span><span class="dv">2</span> <span class="sc">/</span> n))</span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>c0 <span class="ot">&lt;-</span> <span class="dv">1</span> <span class="sc">/</span> <span class="fu">sqrt</span>(<span class="dv">2</span> <span class="sc">*</span> pi <span class="sc">*</span> sdx<span class="sc">^</span><span class="dv">2</span>) <span class="sc">*</span> <span class="fu">exp</span>(<span class="sc">-</span><span class="dv">0</span><span class="sc">^</span><span class="dv">2</span> <span class="sc">/</span> (<span class="dv">2</span> <span class="sc">*</span> sdx<span class="sc">^</span><span class="dv">2</span>))</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>c0 <span class="ot">&lt;-</span> <span class="dv">1</span> <span class="sc">/</span> <span class="fu">sqrt</span>(<span class="dv">2</span> <span class="sc">*</span> pi <span class="sc">*</span> sdx<span class="sc">^</span><span class="dv">2</span><span class="sc">/</span>J) <span class="sc">*</span> <span class="fu">exp</span>(<span class="sc">-</span><span class="dv">0</span><span class="sc">^</span><span class="dv">2</span> <span class="sc">/</span> (<span class="dv">2</span> <span class="sc">*</span> sdx<span class="sc">^</span><span class="dv">2</span><span class="sc">/</span>J))</span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>f0 <span class="sc">/</span> c0</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] 3.617783</code></pre>
 </div>
 <div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># of course, we can also make use of the in-build functionality</span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dnorm</span>(mux, <span class="dv">0</span>, sdx <span class="sc">/</span> <span class="fu">sqrt</span>(n)) <span class="sc">/</span> <span class="fu">dnorm</span>(<span class="dv">0</span>, <span class="dv">0</span>, sdx)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dnorm</span>(mux, <span class="dv">0</span>, sdx <span class="sc">/</span> <span class="fu">sqrt</span>(n)) <span class="sc">/</span> <span class="fu">dnorm</span>(<span class="dv">0</span>, <span class="dv">0</span>, sdx<span class="sc">/</span>J)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] 3.617783</code></pre>
 </div>
 </div>
-<p>Now, simplifying terms, we obtain <span class="math display">\[
-\begin{aligned}
-BF_{0,u} &amp;= \frac{
-\frac{1}{\sqrt{2\pi}}
-\exp \Big\{-\frac{\tilde{\mu}^2}{2} \Big\}
-}{
-\frac{1}{\sqrt{2\pi n}}
-} \\
-&amp;= \sqrt{n} \exp \Big\{-\frac{\tilde{\mu}^2}{2} \Big\}.
-\end{aligned}
-\]</span></p>
+<p>Alternatively, we can use the simplified expression like so.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>mutilde <span class="ot">&lt;-</span> mux <span class="sc">/</span> (sdx<span class="sc">/</span><span class="fu">sqrt</span>(n))</span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>f0 <span class="ot">&lt;-</span> <span class="dv">1</span> <span class="sc">/</span> <span class="fu">sqrt</span>(<span class="dv">2</span> <span class="sc">*</span> pi) <span class="sc">*</span> <span class="fu">exp</span>(<span class="sc">-</span>mutilde<span class="sc">^</span><span class="dv">2</span> <span class="sc">/</span> <span class="dv">2</span>)</span>
@@ -189,105 +192,460 @@ BF_{0,u} &amp;= \frac{
 <pre><code>[1] 3.617783</code></pre>
 </div>
 </div>
-<p>Now, it is easy see that the Bayes factor is only a function of the scaled sample mean. Moreover, we can recognize a scaled standard normal distribution, where the scaling is equal to the square root of the sample size multiplied with <span class="math inline">\(\sqrt{n2\pi}\)</span>. That is, we can obtain the same result by calculating the value of the standard normal density at the location of <span class="math inline">\(\tilde{\mu}\)</span> and multiply it by <span class="math inline">\(\sqrt{n 2 \pi}\)</span>.</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dnorm</span>(mutilde) <span class="sc">*</span> <span class="fu">sqrt</span>(n <span class="sc">*</span> <span class="dv">2</span> <span class="sc">*</span> pi)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>[1] 3.617783</code></pre>
-</div>
-</div>
-<p>This is convenient, because now we can use some results from standard normal theory.</p>
+<p>It is easy see that the Bayes factor is only a function of the scaled sample mean.</p>
 <section id="power-of-a-bayesian-one-sided-t-test-by-simulation" class="level2">
 <h2 class="anchored" data-anchor-id="power-of-a-bayesian-one-sided-t-test-by-simulation">Power of a Bayesian one-sided t-test by simulation</h2>
-<p>To obtain the power of a test with sample size <span class="math inline">\(n\)</span>, we need to calculate the probability that the Bayes factor is larger than a certain value <span class="math inline">\(T\)</span>. To do this we generate <code>nsim = 100000000</code> samples of size <span class="math inline">\(n\)</span> from a normal distribution, calculate the Bayes factor for the null hypothesis <span class="math inline">\(\mu = 0\)</span> against the unconstrained alternative hypothesis, and calculate how often the Bayes factor exceeds the critical value <span class="math inline">\(T\)</span>. For now, suppose <span class="math inline">\(T = 3\)</span>.</p>
+<p>To obtain the power of a test with sample size <span class="math inline">\(n\)</span>, we need to calculate the probability that the Bayes factor is larger than a certain value <span class="math inline">\(Q\)</span>. To do this we generate <code>nsim = 100000000</code> samples of size <span class="math inline">\(n\)</span> from a normal distribution, calculate the Bayes factor for the null hypothesis <span class="math inline">\(\mu = 0\)</span> against the unconstrained alternative hypothesis, and calculate how often the Bayes factor exceeds the critical value <span class="math inline">\(T\)</span>. For now, suppose <span class="math inline">\(Q = 3\)</span>.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(pbapply)</span>
-<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>simfunc <span class="ot">&lt;-</span> <span class="cf">function</span>(<span class="at">n =</span> <span class="dv">20</span>, <span class="at">mu =</span> <span class="dv">0</span>, <span class="at">sd =</span> <span class="dv">1</span>) {</span>
-<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>  x <span class="ot">&lt;-</span> <span class="fu">rnorm</span>(n, mu, sd)</span>
-<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>  mu <span class="ot">&lt;-</span> <span class="fu">mean</span>(x)</span>
-<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>  se <span class="ot">&lt;-</span> <span class="fu">sqrt</span>(<span class="fu">var</span>(x)<span class="sc">/</span>n)</span>
-<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>  mutilde <span class="ot">&lt;-</span> mu <span class="sc">/</span> se</span>
-<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>  BF <span class="ot">&lt;-</span> <span class="fu">sqrt</span>(n) <span class="sc">*</span> <span class="fu">exp</span>(<span class="sc">-</span>mutilde<span class="sc">^</span><span class="dv">2</span><span class="sc">/</span><span class="dv">2</span>)</span>
-<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>  BF</span>
-<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a><span class="fu">pboptions</span>(<span class="at">type =</span> <span class="st">"timer"</span>)</span>
-<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a>cl <span class="ot">&lt;-</span> parallel<span class="sc">::</span><span class="fu">makeCluster</span>(<span class="dv">18</span>)</span>
-<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a>parallel<span class="sc">::</span><span class="fu">clusterExport</span>(cl, <span class="st">"simfunc"</span>)</span>
-<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a>nsim <span class="ot">&lt;-</span> <span class="dv">100000000</span></span>
-<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-18"><a href="#cb17-18" aria-hidden="true" tabindex="-1"></a>bfs <span class="ot">&lt;-</span> <span class="fu">pbreplicate</span>(nsim, <span class="fu">simfunc</span>(<span class="at">n=</span><span class="dv">20</span>), <span class="at">cl =</span> cl)</span>
-<span id="cb17-19"><a href="#cb17-19" aria-hidden="true" tabindex="-1"></a>parallel<span class="sc">::</span><span class="fu">stopCluster</span>(cl)</span>
-<span id="cb17-20"><a href="#cb17-20" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-21"><a href="#cb17-21" aria-hidden="true" tabindex="-1"></a><span class="fu">sum</span>(bfs <span class="sc">&gt;</span> <span class="dv">3</span>) <span class="sc">/</span> nsim</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(pbapply)</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>nsim <span class="ot">&lt;-</span> <span class="dv">10000000</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>Q <span class="ot">&lt;-</span> <span class="dv">3</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>n   <span class="ot">&lt;-</span> <span class="dv">20</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>mu  <span class="ot">&lt;-</span> <span class="dv">0</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>sd  <span class="ot">&lt;-</span> <span class="dv">1</span></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>mu0 <span class="ot">&lt;-</span> <span class="dv">0</span></span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>simfunc <span class="ot">&lt;-</span> <span class="cf">function</span>(<span class="at">n =</span> <span class="dv">20</span>, <span class="at">mu =</span> <span class="dv">0</span>, <span class="at">sd =</span> <span class="dv">1</span>, <span class="at">J =</span> <span class="dv">1</span>, <span class="at">mu0 =</span> <span class="dv">0</span>) {</span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>  x <span class="ot">&lt;-</span> <span class="fu">rnorm</span>(n, mu, sd)</span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>  mu <span class="ot">&lt;-</span> <span class="fu">mean</span>(x)</span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>  se <span class="ot">&lt;-</span> <span class="fu">sqrt</span>(<span class="fu">var</span>(x)<span class="sc">/</span>n)</span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a>  mutilde <span class="ot">&lt;-</span> (mu <span class="sc">-</span> mu0) <span class="sc">/</span> se</span>
+<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a>  BF <span class="ot">&lt;-</span> <span class="fu">sqrt</span>(n<span class="sc">/</span>J) <span class="sc">*</span> <span class="fu">exp</span>(<span class="sc">-</span>mutilde<span class="sc">^</span><span class="dv">2</span><span class="sc">/</span><span class="dv">2</span>)</span>
+<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a>  BF</span>
+<span id="cb15-18"><a href="#cb15-18" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb15-19"><a href="#cb15-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-20"><a href="#cb15-20" aria-hidden="true" tabindex="-1"></a><span class="fu">pboptions</span>(<span class="at">type =</span> <span class="st">"timer"</span>)</span>
+<span id="cb15-21"><a href="#cb15-21" aria-hidden="true" tabindex="-1"></a>cl <span class="ot">&lt;-</span> parallel<span class="sc">::</span><span class="fu">makeCluster</span>(<span class="dv">16</span>)</span>
+<span id="cb15-22"><a href="#cb15-22" aria-hidden="true" tabindex="-1"></a>parallel<span class="sc">::</span><span class="fu">clusterExport</span>(cl, <span class="fu">c</span>(<span class="st">"simfunc"</span>, <span class="st">"n"</span>, <span class="st">"mu"</span>, <span class="st">"sd"</span>, <span class="st">"J"</span>, <span class="st">"mu0"</span>))</span>
+<span id="cb15-23"><a href="#cb15-23" aria-hidden="true" tabindex="-1"></a>bfs <span class="ot">&lt;-</span> <span class="fu">pbreplicate</span>(nsim, <span class="fu">simfunc</span>(<span class="at">n =</span> n, <span class="at">mu =</span> mu, <span class="at">sd =</span> sd, <span class="at">mu0 =</span> mu0), <span class="at">cl =</span> cl)</span>
+<span id="cb15-24"><a href="#cb15-24" aria-hidden="true" tabindex="-1"></a>parallel<span class="sc">::</span><span class="fu">stopCluster</span>(cl)</span>
+<span id="cb15-25"><a href="#cb15-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-26"><a href="#cb15-26" aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(bfs <span class="sc">&gt;</span> Q)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] 0.6172808</code></pre>
+<pre><code>[1] 0.6173818</code></pre>
 </div>
 </div>
 <p>Hence, the power of the test is approximately <span class="math inline">\(0.617\)</span>.</p>
 </section>
 <section id="power-of-a-bayesian-one-sided-t-test-by-analytical-calculation" class="level2">
 <h2 class="anchored" data-anchor-id="power-of-a-bayesian-one-sided-t-test-by-analytical-calculation">Power of a Bayesian one-sided t-test by analytical calculation</h2>
-<p>To obtain the power of the Bayesian one-sample t-test analytically, we can make use of the fact that the Bayes factor follows a scaled standard normal distribution. Using this fact, we can calculate the probability that the Bayes factor is larger than the critical value <span class="math inline">\(T = 3\)</span> for any given sample size <span class="math inline">\(n\)</span>.</p>
-<section id="a-normal-approximation" class="level3">
-<h3 class="anchored" data-anchor-id="a-normal-approximation">A normal approximation</h3>
-<p>So, assuming <span class="math inline">\(n = 20\)</span>, the critical value of the Bayes factor <span class="math inline">\(T = 3\)</span> is reached when the standard normal density equals <span class="math inline">\(3 / \sqrt{20 \cdot 2 \cdot \pi}\)</span>. We can approximate for which value of <span class="math inline">\(\tilde{\mu}\)</span> this is the case using the <code>uniroot()</code> function in <code>R</code>.</p>
+<p>Now, noting that the Bayes factor only depends on the scaled sample mean, we can calculate the power analytically. Importantly, note that the distribution of the scaled sample mean with unknown variance follows a non-central <span class="math inline">\(t\)</span>-distribution with <span class="math inline">\(n-1\)</span> degrees of freedom, and non-centrality parameter <span class="math inline">\(\delta = (\mu - \mu_0) / (\sigma/\sqrt{n})\)</span>. This scaling of the non-centrality parameter arises because we center the data to the hypothesized value and scale by it’s standard error. Therefore, we have to apply the same scaling to the population mean <span class="math inline">\(\mu\)</span>. If the variance was known, the distribution would be a normal distribution with mean <span class="math inline">\(\mu / (\sigma/\sqrt{n})\)</span> and standard deviation <span class="math inline">\(1\)</span>.</p>
+<p>The next step is to calculate for which values of <span class="math inline">\(\tilde{\mu}\)</span> the Bayes factor exceeds the threshold <span class="math inline">\(Q\)</span>. Per <a href="#eq-bf-simple">Equation&nbsp;1</a>, we have that <span class="math display">\[
+\begin{aligned}
+Q &amp;\leq \sqrt{n} \exp \Big\{-\frac{\tilde{\mu}^2}{2} \Big\} \\
+\frac{Q}{\sqrt{n}} &amp;\leq \exp \Big\{-\frac{\tilde{\mu}^2}{2} \Big\} \\
+\log \Big(\frac{Q}{\sqrt{n}} \Big) &amp;\leq -\frac{\tilde{\mu}^2}{2} \\
+2 \log \Big(\frac{\sqrt{n}}{Q} \Big) &amp;\leq \tilde{\mu}^2 \\
+\tilde\mu &amp;\in \Bigg[-\sqrt{2 \log \Big(\frac{\sqrt{n}}{Q} \Big)}, \sqrt{2 \log \Big(\frac{\sqrt{n}}{Q} \Big)}\Bigg].
+\end{aligned}
+\]</span> Hence, as long as <span class="math inline">\(\tilde\mu\)</span> falls within the interval <span class="math inline">\(\Big[-\sqrt{2 \log \Big(\frac{\sqrt{n}}{Q} \Big)}, \sqrt{2 \log \Big(\frac{\sqrt{n}}{Q} \Big)}\Big]\)</span>, the Bayes factor will exceed the threshold <span class="math inline">\(Q\)</span>.</p>
+<p>The final step is to calculate the probability with which the scaled sample mean falls within this interval. This can be done by calculating the cumulative distribution function of the non-central <span class="math inline">\(t\)</span>-distribution with <span class="math inline">\(n-1\)</span> degrees of freedom and non-centrality parameter <span class="math inline">\(\delta = \mu / (\sigma/\sqrt{n})\)</span> at the upper and lower bounds of the interval defined by <span class="math inline">\(\mu_\text{critical}\)</span>.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>f <span class="ot">&lt;-</span> <span class="cf">function</span>(x) {</span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">dnorm</span>(x) <span class="sc">-</span> <span class="dv">3</span> <span class="sc">/</span> <span class="fu">sqrt</span>(n <span class="sc">*</span> <span class="dv">2</span> <span class="sc">*</span> pi)</span>
-<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="fu">uniroot</span>(f, <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">100</span>), <span class="at">tol =</span> .Machine<span class="sc">$</span>double.eps, <span class="at">check.conv =</span> <span class="cn">TRUE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>$root
-[1] 0.8935926
-
-$f.root
-[1] 0
-
-$iter
-[1] 10
-
-$init.it
-[1] NA
-
-$estim.prec
-[1] 2.309496e-05</code></pre>
-</div>
-</div>
-<p>This value is also given by the following equation: <span class="math display">\[
-\mu_{\text{critical}} = \pm \sqrt{2 \cdot \log \Big(\frac{\sqrt{20}}{3} \Big)}
-\]</span></p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>(mu_critical <span class="ot">&lt;-</span> <span class="fu">sqrt</span>(<span class="dv">2</span> <span class="sc">*</span> <span class="fu">log</span>(<span class="fu">sqrt</span>(n) <span class="sc">/</span> <span class="dv">3</span>)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>[1] 0.8935926</code></pre>
-</div>
-<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dnorm</span>(mu_critical) <span class="sc">*</span> <span class="fu">sqrt</span>(n <span class="sc">*</span> <span class="dv">2</span> <span class="sc">*</span> pi)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>[1] 3</code></pre>
-</div>
-</div>
-<p>Now, the only step to take is to calculate the probability that <span class="math inline">\(\tilde{\mu}\)</span> is smaller than this critical value. Note that if we move further to the tails, the Bayes factor for the null hypothesis becomes smaller. Calculating the probability that <span class="math inline">\(\tilde{\mu}\)</span> stays within the interval <span class="math inline">\([-\mu_{\text{critical}}, \mu_{\text{critical}}]\)</span> is easily done using the <code>pnorm()</code> function.</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">pnorm</span>(mu_critical) <span class="sc">-</span> <span class="fu">pnorm</span>(<span class="sc">-</span>mu_critical)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>[1] 0.6284601</code></pre>
-</div>
-</div>
-<p>However, this value does not correspond to the power of the test, because we have not accounted for the fact that the variance is unknown. Hence, we overestimated the power to some extent. The marginal distribution of the sample mean under a normal distribution with unknown variance actually follows a <span class="math inline">\(t\)</span>-distribution with <span class="math inline">\(n-1\)</span> degrees of freedom.</p>
-</section>
-<section id="the-exact-power-using-a-t-distribution" class="level3">
-<h3 class="anchored" data-anchor-id="the-exact-power-using-a-t-distribution">The exact power using a <span class="math inline">\(t\)</span>-distribution</h3>
-<p>Using this fact, we can calculate the exact power of the test.</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="fu">pt</span>(mu_critical, n<span class="dv">-1</span>) <span class="sc">-</span> <span class="fu">pt</span>(<span class="sc">-</span>mu_critical, n<span class="dv">-1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>mu_critical <span class="ot">&lt;-</span> <span class="fu">sqrt</span>(<span class="dv">2</span> <span class="sc">*</span> <span class="fu">log</span>(<span class="fu">sqrt</span>(n) <span class="sc">/</span> Q))</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>delta <span class="ot">&lt;-</span> (<span class="dv">0</span> <span class="sc">-</span> <span class="dv">0</span>) <span class="sc">/</span> (<span class="dv">1</span><span class="sc">/</span><span class="fu">sqrt</span>(n))</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="fu">pt</span>(mu_critical, n<span class="dv">-1</span>, delta) <span class="sc">-</span> <span class="fu">pt</span>(<span class="sc">-</span>mu_critical, n<span class="dv">-1</span>, delta)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] 0.6172806</code></pre>
 </div>
 </div>
 </section>
+<section id="a-normal-approximation" class="level2">
+<h2 class="anchored" data-anchor-id="a-normal-approximation">A normal approximation</h2>
+<p>In case the distribution of the statistic of interest is not known exactly, but can be approximated by a normal distribution, we can also use the cumulative normal distribution function. Note that this would not alter the critical value of the sample mean <span class="math inline">\(\mu_\text{critical}\)</span>, but solely alters the sampling distribution of the mean. In this case, we would have that the scaled sample mean follows a normal distribution with mean <span class="math inline">\(\mu / (\sigma/\sqrt{n})\)</span> and standard deviation <span class="math inline">\(1\)</span>.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">pnorm</span>(mu_critical, delta, sd) <span class="sc">-</span> <span class="fu">pnorm</span>(<span class="sc">-</span>mu_critical, delta, sd)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.6284601</code></pre>
+</div>
+</div>
+</section>
+<section id="the-power-for-any-j" class="level2">
+<h2 class="anchored" data-anchor-id="the-power-for-any-j">The power for any <span class="math inline">\(J\)</span></h2>
+<p>So far, we assumed that <span class="math inline">\(J = 1\)</span>, and thus the fraction of information used in the training data equals <span class="math inline">\(b = \frac{1}{n}\)</span>. However, using a different value for <span class="math inline">\(J\)</span> would yield a different Bayes factor value. Hence, this value alters the calculation of the critical value <span class="math inline">\(Q\)</span>, but not the sampling distribution of the mean. Moreover, the value of <span class="math inline">\(J\)</span> only alters the prior distribution, which then yields <span class="math display">\[
+\pi_0 = \mathcal{N}
+\Big(\mu_0, \frac{\hat{\sigma}^2}{J}\Big).
+\]</span> Accordingly, the Bayes factor equals <span id="eq-bf-simple-J"><span class="math display">\[
+\begin{aligned}
+BF_{0,u} &amp;= \frac{
+\frac{1}{\sqrt{2\pi\frac{\hat{\sigma}^2}{n}}}
+\exp \Big\{-\frac{(\hat{\mu} - \mu_0)^2}{2\frac{\hat{\sigma}^2}{n}} \Big\}
+}{
+\frac{1}{\sqrt{2\pi\hat{\sigma}^2/J}}
+\exp \Big\{-\frac{(\mu_0-\mu_0)^2}{2\frac{\hat{\sigma}^2}{J}} \Big\}
+} \\
+&amp;= \frac{
+\frac{1}{\sqrt{2\pi}} \exp \Big\{-\frac{\tilde{\mu}^2}{2} \Big\}
+}{
+\frac{1}{\sqrt{2\pi \frac{n}{J}}}
+} \\
+&amp;= \sqrt{\frac{n}{J}} \exp \Big\{-\frac{\tilde{\mu}^2}{2} \Big\},
+\end{aligned}
+\tag{2}\]</span></span> and we can define the critical value of the scaled sample mean as <span class="math inline">\(\mu_\text{critical}\)</span> for which the Bayes factor exceeds <span class="math inline">\(Q\)</span> as <span class="math display">\[
+\begin{aligned}
+Q &amp;\leq \sqrt{\frac{n}{J}} \exp \Big\{-\frac{\tilde{\mu}^2}{2} \Big\} \\
+\frac{Q}{\sqrt{n/J}} &amp;\leq \exp \Big\{-\frac{\tilde{\mu}^2}{2} \Big\} \\
+\log \Big(\frac{Q}{\sqrt{n/J}} \Big) &amp;\leq -\frac{\tilde{\mu}^2}{2} \\
+2 \log \Big(\frac{\sqrt{n/J}}{Q} \Big) &amp;\leq \tilde{\mu}^2 \\
+\tilde\mu &amp;\in \Bigg[-\sqrt{2 \log \Big(\frac{\sqrt{n/J}}{Q} \Big)}, \sqrt{2 \log \Big(\frac{\sqrt{n/J}}{Q} \Big)}\Bigg].
+\end{aligned}
+\]</span></p>
+</section>
+<section id="examples" class="level2">
+<h2 class="anchored" data-anchor-id="examples">Examples</h2>
+<section id="the-bfpower-function" class="level3">
+<h3 class="anchored" data-anchor-id="the-bfpower-function">The BFpower function</h3>
+<p>Compiling the above equations in a single <code>R</code> function yields the following code.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>BFpower <span class="ot">&lt;-</span> <span class="cf">function</span>(n, mu, sd, J, mu0, Q) {</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>  mu_critical <span class="ot">&lt;-</span> <span class="fu">sqrt</span>(<span class="dv">2</span> <span class="sc">*</span> <span class="fu">log</span>(<span class="fu">sqrt</span>(n<span class="sc">/</span>J) <span class="sc">/</span> Q))</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>  delta <span class="ot">&lt;-</span> (mu <span class="sc">-</span> mu0) <span class="sc">/</span> (sd<span class="sc">/</span><span class="fu">sqrt</span>(n))</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>  p <span class="ot">&lt;-</span> <span class="fu">pt</span>(mu_critical, n<span class="dv">-1</span>, delta) <span class="sc">-</span> <span class="fu">pt</span>(<span class="sc">-</span>mu_critical, n<span class="dv">-1</span>, delta)</span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(p)</span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="changing-j" class="level3">
+<h3 class="anchored" data-anchor-id="changing-j">Changing <span class="math inline">\(J\)</span></h3>
+<p>Increasing <span class="math inline">\(J\)</span>, we put a more informative prior on the parameter of interest. Accordingly, the Bayes factor in favor of the null hypothesis decreases. This is because the prior distribution is more concentrated around the null hypothesis, and thus the data are more likely to provide evidence against the null hypothesis compared to our a priori beliefs.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>Q <span class="ot">&lt;-</span> <span class="dv">3</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>n   <span class="ot">&lt;-</span> <span class="dv">20</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>J   <span class="ot">&lt;-</span> <span class="dv">2</span></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>mu  <span class="ot">&lt;-</span> <span class="dv">0</span></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>sd  <span class="ot">&lt;-</span> <span class="dv">1</span></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>mu0 <span class="ot">&lt;-</span> <span class="dv">0</span></span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>cl <span class="ot">&lt;-</span> parallel<span class="sc">::</span><span class="fu">makeCluster</span>(<span class="dv">16</span>)</span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a>parallel<span class="sc">::</span><span class="fu">clusterExport</span>(cl, <span class="fu">c</span>(<span class="st">"simfunc"</span>, <span class="st">"n"</span>, <span class="st">"mu"</span>, <span class="st">"sd"</span>, <span class="st">"J"</span>, <span class="st">"mu0"</span>))</span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a>bfs <span class="ot">&lt;-</span> <span class="fu">pbreplicate</span>(nsim, <span class="fu">simfunc</span>(<span class="at">n =</span> n, <span class="at">mu =</span> mu, <span class="at">sd =</span> sd, <span class="at">J =</span> J, <span class="at">mu0 =</span> mu0), <span class="at">cl =</span> cl)</span>
+<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a>parallel<span class="sc">::</span><span class="fu">stopCluster</span>(cl)</span>
+<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-13"><a href="#cb22-13" aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(bfs <span class="sc">&gt;</span> Q)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.2510159</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="fu">BFpower</span>(n, mu, sd, J, mu0, Q)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.2509642</code></pre>
+</div>
+</div>
+<p>We indeed observe that the power for finding a Bayes factor that exceeds the threshold <span class="math inline">\(Q \geq 3\)</span> is smaller when <span class="math inline">\(J = 2\)</span> compared to <span class="math inline">\(J = 1\)</span>.</p>
+</section>
+<section id="changing-q-n-mu-and-sigma" class="level3">
+<h3 class="anchored" data-anchor-id="changing-q-n-mu-and-sigma">Changing <span class="math inline">\(Q\)</span>, <span class="math inline">\(n\)</span>, <span class="math inline">\(\mu\)</span> and <span class="math inline">\(\sigma\)</span></h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>Q   <span class="ot">&lt;-</span> <span class="dv">2</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>n   <span class="ot">&lt;-</span> <span class="dv">30</span></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>mu  <span class="ot">&lt;-</span> <span class="dv">1</span></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>sd  <span class="ot">&lt;-</span> <span class="dv">2</span></span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>mu0 <span class="ot">&lt;-</span> <span class="dv">0</span></span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>cl <span class="ot">&lt;-</span> parallel<span class="sc">::</span><span class="fu">makeCluster</span>(<span class="dv">16</span>)</span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a>parallel<span class="sc">::</span><span class="fu">clusterExport</span>(cl, <span class="fu">c</span>(<span class="st">"simfunc"</span>, <span class="st">"n"</span>, <span class="st">"mu"</span>, <span class="st">"sd"</span>, <span class="st">"J"</span>, <span class="st">"mu0"</span>))</span>
+<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a>bfs <span class="ot">&lt;-</span> <span class="fu">pbreplicate</span>(nsim, <span class="fu">simfunc</span>(<span class="at">n =</span> n, <span class="at">mu =</span> mu, <span class="at">sd =</span> sd, <span class="at">J =</span> J, <span class="at">mu0 =</span> mu0), <span class="at">cl =</span> cl)</span>
+<span id="cb26-10"><a href="#cb26-10" aria-hidden="true" tabindex="-1"></a>parallel<span class="sc">::</span><span class="fu">stopCluster</span>(cl)</span>
+<span id="cb26-11"><a href="#cb26-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-12"><a href="#cb26-12" aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(bfs <span class="sc">&gt;</span> Q)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.0569193</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="fu">BFpower</span>(n, mu, sd, J, mu0, Q)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.05688398</code></pre>
+</div>
+</div>
+</section>
+<section id="changing-the-hypothesized-value-mu_0" class="level3">
+<h3 class="anchored" data-anchor-id="changing-the-hypothesized-value-mu_0">Changing the hypothesized value <span class="math inline">\(\mu_0\)</span></h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>Q   <span class="ot">&lt;-</span> <span class="dv">2</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>n   <span class="ot">&lt;-</span> <span class="dv">30</span></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>mu  <span class="ot">&lt;-</span> <span class="dv">1</span></span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>sd  <span class="ot">&lt;-</span> <span class="dv">2</span></span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>mu0 <span class="ot">&lt;-</span> <span class="dv">1</span></span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a>cl <span class="ot">&lt;-</span> parallel<span class="sc">::</span><span class="fu">makeCluster</span>(<span class="dv">16</span>)</span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a>parallel<span class="sc">::</span><span class="fu">clusterExport</span>(cl, <span class="fu">c</span>(<span class="st">"simfunc"</span>, <span class="st">"n"</span>, <span class="st">"mu"</span>, <span class="st">"sd"</span>, <span class="st">"J"</span>, <span class="st">"mu0"</span>))</span>
+<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a>bfs <span class="ot">&lt;-</span> <span class="fu">pbreplicate</span>(nsim, <span class="fu">simfunc</span>(<span class="at">n =</span> n, <span class="at">mu =</span> mu, <span class="at">sd =</span> sd, <span class="at">J =</span> J, <span class="at">mu0 =</span> mu0), <span class="at">cl =</span> cl)</span>
+<span id="cb30-10"><a href="#cb30-10" aria-hidden="true" tabindex="-1"></a>parallel<span class="sc">::</span><span class="fu">stopCluster</span>(cl)</span>
+<span id="cb30-11"><a href="#cb30-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-12"><a href="#cb30-12" aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(bfs <span class="sc">&gt;</span> Q)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.7401703</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="fu">BFpower</span>(n, mu, sd, J, mu0, Q)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.7403295</code></pre>
+</div>
+</div>
+</section>
+</section>
+</section>
+<section id="bayesian-informative-hypothesis-evaluation" class="level1">
+<h1>Bayesian informative hypothesis evaluation</h1>
+<p>To evaluate the power of an informative hypothesis against the unconstrained hypothesis, we can use a similar approach. However, if the informative hypothesis of interest is an inequality-constrained hypothesis, the Bayes factor is defined in a slightly different way. In this case, we can make use of the encompassing prior approach put forward by <a href="https://psycnet.apa.org/record/2005-16136-009">Klugkist et al.&nbsp;(2005)</a>. Under this set-up, the Bayes factor for the inequality-constrained hypothesis evaluated against the unconstrained hypothesis is given by <span class="math display">\[
+\begin{aligned}
+BF_{i,u} &amp;= \frac{f_i}{c_i} \\
+&amp;=
+\frac{
+\int_{\mu \in M_i} \pi(\mu|X)
+}{
+\int_{\mu \in M_i} \pi_0(\mu)
+},
+\end{aligned}
+\]</span> where <span class="math inline">\(M_i\)</span> denotes the parameter space under the inequality-constrained hypothesis, <span class="math inline">\(\pi(\mu|X)\)</span> denotes the posterior distribution of the mean given the data (marginalized over the variance), and <span class="math inline">\(\pi_0(\mu)\)</span> denotes the prior distribution of the mean (also marginalized over the variance).</p>
+<section id="bayesian-one-sided-hypothesis-evaluation" class="level2">
+<h2 class="anchored" data-anchor-id="bayesian-one-sided-hypothesis-evaluation">Bayesian one-sided hypothesis evaluation</h2>
+<p>First, assume that the hypothesis of interest is a one-sided hypothesis, in the sense that we consider <span class="math inline">\(H_i: \mu &gt; \mu_0\)</span> or <span class="math inline">\(H_{i'}: \mu &lt; \mu_0\)</span>. In this setting, centering the prior distribution at the hypothesized value yields a complexity of <span class="math inline">\(c_i = 0.5\)</span>, and thus we have that <span class="math inline">\(BF_{i,u} = 2 \cdot f_i\)</span>. From this observation, it follows that the maximum Bayes factor equals <span class="math inline">\(BF_{i,u}^\max=2\)</span>, whereas the minimum Bayes factor equals <span class="math inline">\(BF_{i,u}^\min=0\)</span>. Moreover, since a normal approximation is used to the posterior distribution of the parameters, we have that <span class="math display">\[
+\begin{aligned}
+BF_{i,u} &amp;= 2 \int_{\mu \in M_i}
+\frac{1}{\sqrt{2\pi \frac{\hat\sigma^2}{n}}}
+\exp \Big\{ -\frac{(\hat\mu - \mu_0)^2}{2 \frac{\hat\sigma^2}{n}} \Big\} d\mu,\\
+&amp;= 2 \int_{\mu \in M_i} \frac{1}{\sqrt{2 \pi}} \exp \Big\{ -\frac{\tilde\mu^2}{2} \Big\} d\mu,\\
+&amp;= 2 \cdot (\Phi(\sup(M_i)) - \Phi(\inf(M_i))),
+\end{aligned}
+\]</span> where <span class="math inline">\(\Phi\)</span> denotes the cumulative distribution function of the normal distribution with mean <span class="math inline">\(\tilde\mu\)</span> and variance <span class="math inline">\(1\)</span>, and <span class="math inline">\(\sup(M_i)\)</span> and <span class="math inline">\(\inf(M_i)\)</span> denote the upper and lower bounds of the parameter space under the inequality-constrained hypothesis, respectively. Assuming that the hypothesis of interest is <span class="math inline">\(H_i: \mu &gt; x\)</span> or <span class="math inline">\(H_{i'}: \mu &lt; x\)</span>, with the prior distribution centered at <span class="math inline">\(x\)</span>, we either have that <span class="math inline">\(\Phi(\sup(M_i)) = 1\)</span> or <span class="math inline">\(\Phi(\inf(M_i)) = 0\)</span>, respectively. Hence, the critical value for <span class="math inline">\(\tilde\mu\)</span> that corresponds to a Bayes factor of <span class="math inline">\(Q\)</span> is given by <span class="math display">\[
+\begin{aligned}
+\mu_\text{critical} = \pm \Phi^{-1}(Q/2),
+\end{aligned}
+\]</span> where the <span class="math inline">\(\pm\)</span> sign depends on whether the hypothesis of interest is <span class="math inline">\(H_i\)</span> or <span class="math inline">\(H_{i'}\)</span> and <span class="math inline">\(\Phi^{-1}\)</span> denotes the inverse of the cumulative normal distribution. The next step is to obtain the power by quantifying the probability that Accordingly, the power of the test is given by the probability that <span class="math inline">\(\tilde\mu &gt; \mu_\text{critical}\)</span>. Again, this probability is given by the cumulative distribution function of the non-central <span class="math inline">\(t\)</span>-distribution with <span class="math inline">\(n-1\)</span> degrees of freedom and non-centrality parameter $= (-_0)/(^2/n).</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>Q <span class="ot">&lt;-</span> <span class="fl">1.5</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>simfunc <span class="ot">&lt;-</span> <span class="cf">function</span>(n, <span class="at">mu =</span> <span class="dv">0</span>, <span class="at">sd =</span> <span class="dv">1</span>, <span class="at">mu0 =</span> <span class="dv">0</span>) {</span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>  x <span class="ot">&lt;-</span> <span class="fu">rnorm</span>(n, mu, sd)</span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a>  mux <span class="ot">&lt;-</span> <span class="fu">mean</span>(x)</span>
+<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a>  varx <span class="ot">&lt;-</span> <span class="fu">var</span>(x)</span>
+<span id="cb34-7"><a href="#cb34-7" aria-hidden="true" tabindex="-1"></a>  mutilde <span class="ot">&lt;-</span> (mux<span class="sc">-</span>mu0) <span class="sc">/</span> <span class="fu">sqrt</span>(varx<span class="sc">/</span>n)</span>
+<span id="cb34-8"><a href="#cb34-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pnorm</span>(<span class="dv">0</span>, mutilde, <span class="dv">1</span>, <span class="at">lower.tail =</span> <span class="cn">FALSE</span>) <span class="sc">/</span> </span>
+<span id="cb34-9"><a href="#cb34-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">pnorm</span>(<span class="dv">0</span>, <span class="dv">0</span>, <span class="fu">sqrt</span>(n), <span class="at">lower.tail =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb34-10"><a href="#cb34-10" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb34-11"><a href="#cb34-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-12"><a href="#cb34-12" aria-hidden="true" tabindex="-1"></a>bain<span class="sc">::</span><span class="fu">bain</span>(fit, <span class="st">"x &gt; 0"</span>, <span class="at">fraction =</span> J)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Bayesian informative hypothesis testing for an object of class t_test:
+
+   Fit   Com   BF.u  BF.c  PMPa  PMPb  PMPc 
+H1 0.743 0.500 1.485 2.884 1.000 0.598 0.743
+Hu                               0.402      
+Hc 0.257 0.500 0.515                   0.257
+
+Hypotheses:
+  H1: x&gt;0
+
+Note: BF.u denotes the Bayes factor of the hypothesis at hand versus the unconstrained hypothesis Hu. BF.c denotes the Bayes factor of the hypothesis at hand versus its complement. PMPa contains the posterior model probabilities of the hypotheses specified. PMPb adds Hu, the unconstrained hypothesis. PMPc adds Hc, the complement of the union of the hypotheses specified.</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a>mutilde <span class="ot">&lt;-</span> (<span class="fu">mean</span>(x) <span class="sc">-</span> <span class="dv">0</span>) <span class="sc">/</span> <span class="fu">sqrt</span>(<span class="fu">var</span>(x)<span class="sc">/</span><span class="fu">length</span>(x))</span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a><span class="fu">pnorm</span>(<span class="dv">0</span>, mutilde, <span class="dv">1</span>, <span class="at">lower.tail =</span> <span class="cn">FALSE</span>) <span class="sc">/</span> </span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pnorm</span>(<span class="dv">0</span>, <span class="dv">0</span>, n, <span class="at">lower.tail =</span> <span class="cn">FALSE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 1.485057</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a>cl <span class="ot">&lt;-</span> parallel<span class="sc">::</span><span class="fu">makeCluster</span>(<span class="dv">16</span>)</span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>parallel<span class="sc">::</span><span class="fu">clusterExport</span>(cl, <span class="st">"simfunc"</span>)</span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a>bfs <span class="ot">&lt;-</span> <span class="fu">pbreplicate</span>(nsim, <span class="fu">simfunc</span>(<span class="at">n=</span><span class="dv">10</span>, <span class="at">mu =</span> <span class="dv">0</span>, <span class="at">sd =</span> <span class="dv">1</span>), <span class="at">cl =</span> cl)</span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a>parallel<span class="sc">::</span><span class="fu">stopCluster</span>(cl)</span>
+<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-6"><a href="#cb38-6" aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(bfs <span class="sc">&gt;</span> Q)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.2584449</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a>mu_critical <span class="ot">&lt;-</span> <span class="fu">qnorm</span>(Q<span class="sc">/</span><span class="dv">2</span>, <span class="dv">0</span>)</span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a><span class="fu">pt</span>(<span class="cn">Inf</span>, <span class="dv">9</span>, <span class="at">ncp =</span> <span class="dv">0</span> <span class="sc">/</span> (<span class="dv">1</span> <span class="sc">/</span> <span class="fu">sqrt</span>(<span class="dv">10</span>))) <span class="sc">-</span> <span class="fu">pt</span>(mu_critical, <span class="dv">9</span>, <span class="at">ncp =</span> <span class="dv">0</span> <span class="sc">/</span> (<span class="dv">1</span> <span class="sc">/</span> <span class="fu">sqrt</span>(<span class="dv">10</span>)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.2584746</code></pre>
+</div>
+</div>
+</section>
+<section id="examples-1" class="level2">
+<h2 class="anchored" data-anchor-id="examples-1">Examples</h2>
+<p>Using the equations defined above, we can again create a power function for Bayesian one-sided hypothesis evaluation. Note that for these hypotheses, the Bayes factor is defined irrespective of the fraction of information <span class="math inline">\(J\)</span> used to construct the prior.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb42"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a>BFpower <span class="ot">&lt;-</span> <span class="cf">function</span>(n, mu, sd, mu0, Q, <span class="at">alternative =</span> <span class="st">"greater"</span>) {</span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a>  mu_critical <span class="ot">&lt;-</span> <span class="fu">qnorm</span>(Q<span class="sc">/</span><span class="dv">2</span>, <span class="dv">0</span>)</span>
+<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a>  alternative <span class="ot">&lt;-</span> <span class="fu">match.arg</span>(alternative, <span class="fu">c</span>(<span class="st">"greater"</span>, <span class="st">"less"</span>))</span>
+<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (alternative <span class="sc">==</span> <span class="st">"greater"</span>) {</span>
+<span id="cb42-5"><a href="#cb42-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">pt</span>(mu_critical, n<span class="dv">-1</span>, <span class="at">ncp =</span> (mu <span class="sc">-</span> mu0) <span class="sc">/</span> <span class="fu">sqrt</span>(sd<span class="sc">^</span><span class="dv">2</span> <span class="sc">/</span> n), <span class="at">lower.tail =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb42-6"><a href="#cb42-6" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> <span class="cf">if</span> (alternative <span class="sc">==</span> <span class="st">"less"</span>) {</span>
+<span id="cb42-7"><a href="#cb42-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">pt</span>(mu_critical, n<span class="dv">-1</span>, <span class="at">ncp =</span> (mu <span class="sc">-</span> mu0) <span class="sc">/</span> <span class="fu">sqrt</span>(sd<span class="sc">^</span><span class="dv">2</span> <span class="sc">/</span> n), <span class="at">lower.tail =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb42-8"><a href="#cb42-8" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb42-9"><a href="#cb42-9" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<section id="changing-the-bayes-factor-threshold" class="level3">
+<h3 class="anchored" data-anchor-id="changing-the-bayes-factor-threshold">Changing the Bayes factor threshold</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb43"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a>Q <span class="ot">&lt;-</span> <span class="fl">1.8</span></span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>n <span class="ot">&lt;-</span> <span class="dv">10</span></span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a>mu <span class="ot">&lt;-</span> <span class="dv">0</span></span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a>sd <span class="ot">&lt;-</span> <span class="dv">1</span></span>
+<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a>mu0 <span class="ot">&lt;-</span> <span class="dv">0</span></span>
+<span id="cb43-6"><a href="#cb43-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-7"><a href="#cb43-7" aria-hidden="true" tabindex="-1"></a>cl <span class="ot">&lt;-</span> parallel<span class="sc">::</span><span class="fu">makeCluster</span>(<span class="dv">16</span>)</span>
+<span id="cb43-8"><a href="#cb43-8" aria-hidden="true" tabindex="-1"></a>parallel<span class="sc">::</span><span class="fu">clusterExport</span>(cl, <span class="fu">c</span>(<span class="st">"simfunc"</span>, <span class="st">"Q"</span>, <span class="st">"n"</span>, <span class="st">"mu"</span>, <span class="st">"sd"</span>, <span class="st">"mu0"</span>))</span>
+<span id="cb43-9"><a href="#cb43-9" aria-hidden="true" tabindex="-1"></a>bfs <span class="ot">&lt;-</span> <span class="fu">pbreplicate</span>(nsim, <span class="fu">simfunc</span>(<span class="at">n =</span> n, <span class="at">mu =</span> mu, <span class="at">sd =</span> sd, <span class="at">mu0 =</span> mu0), <span class="at">cl =</span> cl)</span>
+<span id="cb43-10"><a href="#cb43-10" aria-hidden="true" tabindex="-1"></a>parallel<span class="sc">::</span><span class="fu">stopCluster</span>(cl)</span>
+<span id="cb43-11"><a href="#cb43-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-12"><a href="#cb43-12" aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(bfs <span class="sc">&gt;</span> Q)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.1159107</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb45"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="fu">BFpower</span>(n, mu, sd, mu0, Q, <span class="st">"greater"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.1160153</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb47"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a>Q <span class="ot">&lt;-</span> <span class="fl">0.1</span></span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(bfs <span class="sc">&lt;</span> Q)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.0671183</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb49"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="fu">BFpower</span>(n, mu, sd, mu0, Q, <span class="st">"less"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.06720512</code></pre>
+</div>
+</div>
+</section>
+<section id="changing-n-mu-sigma-and-mu_0" class="level3">
+<h3 class="anchored" data-anchor-id="changing-n-mu-sigma-and-mu_0">Changing <span class="math inline">\(n\)</span>, <span class="math inline">\(\mu\)</span>, <span class="math inline">\(\sigma\)</span> and <span class="math inline">\(\mu_0\)</span></h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb51"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a>Q   <span class="ot">&lt;-</span> <span class="fl">1.5</span></span>
+<span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a>n   <span class="ot">&lt;-</span> <span class="dv">30</span></span>
+<span id="cb51-3"><a href="#cb51-3" aria-hidden="true" tabindex="-1"></a>mu  <span class="ot">&lt;-</span> <span class="fl">0.5</span></span>
+<span id="cb51-4"><a href="#cb51-4" aria-hidden="true" tabindex="-1"></a>sd  <span class="ot">&lt;-</span> <span class="dv">2</span></span>
+<span id="cb51-5"><a href="#cb51-5" aria-hidden="true" tabindex="-1"></a>mu0 <span class="ot">&lt;-</span> <span class="fl">0.1</span></span>
+<span id="cb51-6"><a href="#cb51-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb51-7"><a href="#cb51-7" aria-hidden="true" tabindex="-1"></a>cl <span class="ot">&lt;-</span> parallel<span class="sc">::</span><span class="fu">makeCluster</span>(<span class="dv">16</span>)</span>
+<span id="cb51-8"><a href="#cb51-8" aria-hidden="true" tabindex="-1"></a>parallel<span class="sc">::</span><span class="fu">clusterExport</span>(cl, <span class="fu">c</span>(<span class="st">"simfunc"</span>, <span class="st">"Q"</span>, <span class="st">"n"</span>, <span class="st">"mu"</span>, <span class="st">"sd"</span>, <span class="st">"mu0"</span>))</span>
+<span id="cb51-9"><a href="#cb51-9" aria-hidden="true" tabindex="-1"></a>bfs <span class="ot">&lt;-</span> <span class="fu">pbreplicate</span>(nsim, <span class="fu">simfunc</span>(<span class="at">n =</span> n, <span class="at">mu =</span> mu, <span class="at">sd =</span> sd, <span class="at">mu0 =</span> mu0), <span class="at">cl =</span> cl)</span>
+<span id="cb51-10"><a href="#cb51-10" aria-hidden="true" tabindex="-1"></a>parallel<span class="sc">::</span><span class="fu">stopCluster</span>(cl)</span>
+<span id="cb51-11"><a href="#cb51-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb51-12"><a href="#cb51-12" aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(bfs <span class="sc">&gt;</span> Q)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.6646216</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb53"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="fu">BFpower</span>(n, mu, sd, mu0, Q, <span class="st">"greater"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.6646206</code></pre>
+</div>
+</div>
+</section>
+</section>
+</section>
+<section id="loose-ends" class="level1">
+<h1>Loose ends</h1>
+<p>Now we have defined Bayes power analysis for the one-sample <span class="math inline">\(t\)</span>-test under the approximate adjusted Bayes factor set-up. However, there are some loose ends that still need to be tied up.</p>
+<ol type="1">
+<li>How can we calculate the power of the Bayes factor when the informative hypothesis of interest is a range hypothesis? Under the current set-up, the scaled sample mean changes as a function of the sample size. I’m assuming it is straightforward to scale the sampling distribution of the mean accordingly, but this is to be investigated.</li>
+<li>More importantly is the question how to calculate the power of the Bayes factor when two informative hypotheses are evaluated against each other. Currently, we only evaluated against the unconstrained hypothesis. This is a more difficult problem, as we have to take into account that the Bayes factor is dependent on quantities in both the numerator and the denominator. This problem should solely affect the calculation of the critical value, which can always be done approximately, by using the <code>uniroot()</code> function in <code>R</code>.</li>
+<li>We have not yet investigated the power of the Bayes factor under a multi-parameter set-up. Yet, this is possible using a (non-central) <span class="math inline">\(\chi^2\)</span>-distribution or a (non-central) <span class="math inline">\(F\)</span>-distribution.</li>
+</ol>
+<!-- # Power of a Bayesian two-sample t-test -->
+<!-- Now, consider the situation that we have two samples $\{X_i^{(1)}\}_{i=1}^{n_1}$ and $\{X_j^{(2)}\}_{j=1}^{n_2}$, one of size $n_1$ and one of size $n_2$. Let's assume that $n_1 = n_2$ for simplicity. Moreover, assume that we want to calculate the Bayes factor for the null hypothesis that the means of the two samples are equal, against the alternative hypotheses that the means are not equal. That is, we have $\mathcal{H}_0: \mu_1 = \mu_2$ and $\mathcal{H}_1: \mu_1 \neq \mu_2$. For the time being, also assume that they have the same variance.  -->
+<!-- Accordingly, we can again use the Savage-Dickey density ratio to calculate the Bayes factor, but now using a multivariate normal distribution. Hence, under the set-up of the approximate adjusted fractional Bayes factor, we have that the Bayes factor is given by -->
+<!-- $$ -->
+<!-- \begin{aligned} -->
+<!-- BF_{0,1} &= \frac{P(\mu_1 = \mu_2 | X)}{P(\mu_1 = \mu_2 | \pi_0)} -->
+<!-- \end{aligned} -->
+<!-- $$ -->
+<!-- ```{r} -->
+<!-- set.seed(1) -->
+<!-- n1 <- 20 -->
+<!-- n2 <- 20 -->
+<!-- mu1 <- 0 -->
+<!-- mu2 <- 1 -->
+<!-- sigma1 <- 1 -->
+<!-- sigma2 <- 1 -->
+<!-- x1 <- rnorm(n1, mu1, sigma1) -->
+<!-- x2 <- rnorm(n2, mu2, sigma2) -->
+<!-- fit <- bain::t_test(x2, x1, var.equal = TRUE) -->
+<!-- bf <- bain::bain(fit, 'x = y', fraction = 2) -->
+<!-- bf -->
+<!-- sp <- sqrt((n1 - 1)*var(x1) + (n2 - 1)*var(x2)) / sqrt(n1 + n2 - 2) -->
+<!-- dnorm(0, mean(x2) - mean(x1), sp * sqrt(1/n1 + 1/n2)) / -->
+<!--   dnorm(0, 0, sp / 3) -->
+<!-- ``` -->
+<!-- ## Sketch of the approach to take -->
+<!-- Find the radius of the ellipsoid that corresponds to the critical value of the Bayes factor. Then, calculate the probability that the sample mean falls within this ellipsoid (and note that the sample mean follows a multivariate $t$ distribution). -->
+<!-- ```{r} -->
+<!-- n <- 1000 -->
+<!-- mu <- c(1,2) -->
+<!-- sigma <- diag(c(1,2) - 0.5) + 0.5  -->
+<!-- x <- matrix(rnorm(n*2), n) %*% chol(sigma) + matrix(mu, n, 2, byrow = TRUE) -->
+<!-- library(ggplot2) -->
+<!-- angles <- (0:256) * 2 * pi / 256 -->
+<!-- unit.circle <- cbind(cos(angles), sin(angles)) -->
+<!-- ellipse <- t(c(0, 0) + 1 * t(unit.circle %*% chol(J * sigma))) -->
+<!-- data.frame(x) |> -->
+<!--   ggplot(aes(x = X1, y = X2)) + -->
+<!--   geom_point() + -->
+<!--   stat_density2d() + -->
+<!--   geom_path(data = data.frame(ellipse), col = "orange") -->
+<!-- ``` -->
+<!-- For calculation of the ellipse, see  -->
+<!-- [https://ggplot2.tidyverse.org/reference/stat_ellipse.html](https://ggplot2.tidyverse.org/reference/stat_ellipse.html) -->
+<!-- For some notes on the geometry of the multivariate Gaussian distribution, see -->
+<!-- [chrome-extension://oemmndcbldboiebfnladdacbdfmadadm/https://cs229.stanford.edu/section/gaussians.pdf](chrome-extension://oemmndcbldboiebfnladdacbdfmadadm/https://cs229.stanford.edu/section/gaussians.pdf) -->
+<!-- And for some notes on the numerical computation of multivariate normal and multivariate $t$ probabilities over ellipsoidal regions, see [chrome-extension://oemmndcbldboiebfnladdacbdfmadadm/file:///C:/Users/5868777/AppData/Local/Google/Chrome/Downloads/jss2r.pdf](chrome-extension://oemmndcbldboiebfnladdacbdfmadadm/file:///C:/Users/5868777/AppData/Local/Google/Chrome/Downloads/jss2r.pdf) -->
+<!-- Other links: -->
+<!-- - [https://www.visiondummy.com/2014/04/draw-error-ellipse-representing-covariance-matrix/#comment-190](https://www.visiondummy.com/2014/04/draw-error-ellipse-representing-covariance-matrix/#comment-190) -->
+<!-- ```{r} -->
+<!-- n <- 10000 -->
+<!-- mu <- c(1,2) -->
+<!-- sigma <- diag(c(1,2) - 0.5) + 0.5 -->
+<!-- X <- mvtnorm::rmvnorm(n = n, mean = mu, sigma = sigma) -->
+<!-- var(X) -->
+<!-- colMeans(X) -->
+<!-- C <- X - t(colMeans(X)) %x% rep(1, n) -->
+<!-- S <- C %*% solve(chol(var(C))) -->
+<!-- all.equal(X, S %*% chol(var(C)) + t(colMeans(X)) %x% rep(1, n)) -->
+<!-- ``` -->
+<!-- ```{r} -->
+<!-- fx <- function(x, mu, sigma) { -->
+<!--   k <- length(mu) -->
+<!--   exp(-t(x-mu) %*% solve(sigma) %*% (x-mu) / 2) / sqrt((2*pi)^k * det(sigma)) -->
+<!-- } -->
+<!-- fx(c(1,2), mu, sigma) -->
+<!-- mvtnorm::dmvnorm(c(1,2), mu, sigma) -->
+<!-- t(c(2,0)) %*% solve(sigma) %*% c(2,0) -->
+<!-- eigen(sigma) -->
+<!-- ``` -->
+<!-- ### Forming the hyperellipse around $\mathbf{0}_p$ -->
+<!-- ```{r} -->
+<!-- set.seed(1) -->
+<!-- P <- 3 -->
+<!-- N <- 10000000 -->
+<!-- S <- 0.7 + 0.3 * diag(P) -->
+<!-- M <- rep(0, P) -->
+<!-- # X <- mvtnorm::rmvt(N, sigma = S, delta = M, df = 10-P) -->
+<!-- # For normal distribution, uncomment the following two lines -->
+<!-- X <- rnorm(N*P) |> matrix(N) %*% chol(0.7 + 0.3 * diag(P)) -->
+<!-- X <- X + t(M) %x% rep(1, N) -->
+<!-- rgl::plot3d(X, xlim = c(-10,10), ylim = c(-10,10), zlim = c(-10,10)) -->
+<!-- #rgl::text3d(X, texts = 1:N, add = TRUE) -->
+<!-- rgl::plot3d(rgl::ellipse3d(var(X), subdivide = 2^2), col = "seagreen", alpha = 0.3, add = TRUE) -->
+<!-- E <- eigen(var(X)) -->
+<!-- E <- eigen(S) -->
+<!-- #XC <- X - t(colMeans(X)) %x% rep(1, N) -->
+<!-- XC <- X -->
+<!-- C <- qchisq(0.95, P) -->
+<!-- #C <- 3 * qf(0.95, P, 10-P, ncp = 0) -->
+<!-- C -->
+<!-- #C <- 1 -->
+<!-- W <- diag(1 / sqrt(C * E$values)) %*% t(E$vectors) -->
+<!-- mean(colSums((W %*% t(XC))^2) < 1) -->
+<!-- pchisq(1, 0.95, P) -->
+<!-- shotGroups::pmvnEll(sqrt(C), sigma = 0.7 + 0.3 * diag(P), mu = M,  -->
+<!--                     e = solve(0.7 + 0.3 * diag(P)), x0 = rep(0,P)) -->
+<!-- mvtnorm::qmvnorm(0.95, mean = rep(0,P), sigma = 0.7 + 0.3 * diag(P),  -->
+<!--                  lower = rep(-Inf, P), upper = rep(Inf, P)) -->
+<!-- mvtnorm::pmvnorm(-2, 2, mean = rep(0,P), sigma = 0.7 + 0.3 * diag(P), -->
+<!--                  ) -->
+<!-- L <- t(chol(S)) -->
+<!-- E2 <- eigen(L %*% S %*% t(L)) -->
+<!-- t(E2$vectors) %*% solve(L) %*% rep(0, P) -->
+<!-- ``` -->
 </section>
 
 </main>
