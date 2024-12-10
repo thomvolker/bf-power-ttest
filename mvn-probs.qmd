@@ -1,0 +1,474 @@
+---
+title: "Finding ellipsoidal probabilities under the multivariate normal model"
+format: html
+---
+
+::: {.hidden}
+\newcommand{\A}{\mathcal{A}}
+\newcommand{\bx}{\mathbf{x}}
+\newcommand{\bmu}{\mathbf{\mu}}
+\newcommand{\bSig}{\mathbf{\Sigma}}
+:::
+
+# Introduction
+
+Many statistical models impose multivariate normality, for example, for example on the regression parameters in a linear regression model. A question that may arise is how to find the probability that a random vector falls into some convex region $\A$ under this model. That is, we seek to find
+$$
+P(\bx \in \A) = \int_{\A} f(\bx) d\bx,
+$$
+where $f(\bx)$ is the density of the multivariate normal distribution. That is,
+$$
+f(\bx) = \frac{1}{\sqrt{(2\pi)^p |\bSig|}}
+\exp \Bigg\{
+-\frac{1}{2} (\bx - \bmu)^\top \bSig^{-1} (\bx - \bmu) \Bigg\},
+$$
+where $p$ denotes the number of dimensions, $\bmu$ is the mean vector, and $\bSig$ is the covariance matrix, and $|\cdot|$ denotes the determinant.
+
+
+# Solving $P(x \in \mathcal{A})$ when $\mathcal{A}$ is a hyperrectangle
+
+If the region $\A$ is rectangular, the problem is easily solved using of the shelf tools, such as the `pmvnorm` function in the `mvtnorm` package in `R`. In such circumstances, we seek to find the solution of the integral
+$$
+P(\bx \in \A) = 
+\frac{1}{\sqrt{(2\pi)^p |\bSig|}}
+\int_{a_1}^{b_1} \int_{a_2}^{b_2} \cdots \int_{a_p}^{b_p} 
+\exp \Bigg\{
+-\frac{1}{2} (\bx - \bmu)^\top \bSig^{-1} (\bx - \bmu) \Bigg\}
+\Bigg\} d\bx,
+$$
+where $a_i$ and $b_i$ are the lower and upper bounds of the $i$th dimension of the region $\A$. [Genz (1992)](https://www.jstor.org/stable/1390838) shows that this integral can be transformed into the iterated integral
+$$
+P(\bx \in \A) = 
+(e_1 - d_1) \int_0^1 (e_2 - d_2) \dots \int_0^1 (e_m - d_m) \int_0^1 d \mathbf{w},
+$$
+with $d_i = \mathbf{\Phi}((a_i - \sum^{i-1}_j c_{i,j} \mathbf{\Phi}^{-1}(d_j + w_j(e_j-d_j)))/c_{i,i})$ and $e_i = \mathbf{\Phi}((b_i - \sum^{i-1}_j c_{i,j} \mathbf{\Phi}^{-1}(d_j + w_j(e_j-d_j)))/c_{i,i})$. That is, we transform the problem into a series of univariate integrals that can be easily solved using standard univariate integration tools as, for example, `pnorm()` in `R`.
+
+The following code implements the approach in `R`. Note, however, that the current implementations use some additional tricks to increase the accuracy of the program (or reduce the computation time), by changing the order of the variables. 
+
+```{r}
+set.seed(123)
+
+# Parameters
+P <- 5
+rho <- 0.5
+S <- rho + (1-rho) * diag(P)
+mu <- 1:P
+
+# Integration limits
+a <- sample(-(1:P)) - mu
+b <- 3 * sample(1:P) - mu
+
+# Test results
+mvtnorm::pmvnorm(lower = a, upper = b, mean = 0, sigma = S)
+
+# Convergence limits
+maxerr <- 1e-4
+Nmax <- 10000
+
+# Cholesky decomposition
+C <- t(chol(S))
+
+# Initialize variables
+intsum <- 0
+varsum <- 0
+N      <- 1
+d1 <- pnorm(a[1]/C[1,1])
+e1 <- pnorm(b[1]/C[1,1])
+f1 <- e1 - d1
+
+# Loop until convergence
+conv <- FALSE
+out <- numeric(Nmax)
+while(!conv) {
+  
+  w <- runif(P-1)
+  di <- d1
+  ei <- e1
+  fi <- ei - di
+  for (i in 2:P) {
+    if (i == 2) yi <- 0
+    yi[i-1] <- qnorm(di + w[i-1] * (ei - di))
+    di <- pnorm((a[i] - sum(C[i, 1:(i-1)]*yi))/C[i,i])
+    ei <- pnorm((b[i] - sum(C[i, 1:(i-1)]*yi))/C[i,i])
+    fi <- (ei - di) * fi
+  }
+  intsum <- intsum + fi
+  varsum <- varsum + fi^2
+  N <- N+1
+  err <- 1 * ((varsum/N - (intsum/N)^2)/(N))^.5
+  out[N-1] <- intsum/N
+  if (N == Nmax | err < maxerr) conv <- TRUE
+}
+N
+err
+intsum/N
+
+plot(out[out != 0], type = "l", lwd = 2, col = "blue")
+abline(h = mvtnorm::pmvnorm(lower = a, upper = b, mean = 0, sigma = S), lty=2)
+```
+
+Moreover, we can confirm the procedure using a small simulation.
+
+```{r}
+a <- a + mu
+b <- b + mu
+
+N <- 10000000
+
+X <- rnorm(N*P) |> matrix(N) %*% chol(S) + matrix(mu, N, P, byrow = TRUE)
+sapply(1:P, function(p) X[,p] > a[p] & X[,p] < b[p]) |> 
+ {\(x) rowSums(x) == P}() |> mean()
+```
+
+However, if the integration is not over a hyperrectangle, the current approach cannot be used, and we need to resolve to other techniques. 
+
+# Solving $P(x \in \mathcal{A})$ when $\mathcal{A}$ is a hyperellipse
+
+When the region $\A$ is an ellipse, the problem is more complicated, at least in the sense that it is not executable using the `mvtnorm` package.
+
+## Solving $P(x \in \mathcal{A})$ when $\mathcal{A}$ is a constant-density hyperellipse around $\mathbf{\mu}$
+
+First, consider the case where the ellipse is a constant-density hyper-ellipse, that is by definition centered around the mean vector $\bmu$ and with axes in the directions of the eigenvectors of the covariance matrix $\bSig$. We can visualize the idea as follows. 
+
+```{r}
+#| include: false
+
+library(tidyr)
+library(dplyr)
+library(ggplot2)
+```
+
+```{r}
+mu <- c(1,2)
+S  <- matrix(c(1,1,1,2), ncol = 2)
+
+# Generate a grid with density values for the multivariate normal distribution
+x1 <- seq(-2, 4, length.out = 200)
+x2 <- seq(-2, 6, length.out = 200)
+X <- expand_grid(x1, x2) |>
+  mutate(z = mvtnorm::dmvnorm(cbind(x1, x2), mu, S))
+
+# Create evenly spaced points on a unit circle
+angles <- seq(0, 2*pi, length.out = 50)
+unit.circle <- cbind(cos(angles), sin(angles))
+
+# Specify the radius of the circle
+C <- 2.5
+# Make the circle elliptical by scaling with the Cholesky 
+# decomposition of the covariance matrix
+ellipse <- t(mu + t(unit.circle %*% chol(C * S)))
+
+ggplot() +
+  geom_contour_filled(aes(x = X$x1, y = X$x2, z = X$z)) +
+  geom_path(data = NULL, 
+            aes(x = ellipse[,1], y = ellipse[,2]),
+            col = "orange", linewidth = 2)
+```
+
+Here, the orange circle in the plot represents the ellipse with constant density `r mvtnorm::dmvnorm(ellipse[1,], mu, S) |> round(3)`. 
+
+Noting that the quadratic form $\Delta^2 = (X-\bmu)^T\bSig^{-1}(X-\bmu)$, which is also known as the Mahalanobis distance, follows a $\chi^2_\nu$ distribution with $\nu = P$ degrees of freedom, we can use this property to calculate the probability of a point falling within the ellipse.
+
+Given that the radius of the ellipse is $C$, we can calculate the probability that a point falls within the ellipse using the cumulative distribution function of the $\chi^2$ distribution, implemented in `R` as the `pchisq` function. 
+
+
+```{r}
+pchisq(C, df = length(mu))
+```
+
+We can verify this by simulating a large number of points, and calculating the proportion of the points that falls within the ellipse. Calculating whether a point falls within a given hyperellipse in a $P$-dimensional space can be done by rotating the data points such that the axes of the ellipse align with the coordinate axes. Then, we can calculate whether the point falls within the ellipse by calculating the Euclidean distance of a point to the origin, and evaluate whether the sum of the squared coordinates is smaller than the squared half-axis-lengths. Note that the squared half axis lengths are given by the eigenvalues of the covariance matrix $\bSig$ multiplied with the constant $C$.
+
+```{r}
+N <- 100000000
+P <- length(mu)
+X <- rnorm(N*P) |> matrix(N) %*% chol(S) + matrix(mu, N, P, byrow = TRUE)
+XC <- X - matrix(mu, N, P, byrow = TRUE)
+
+E <- eigen(S)
+
+((XC %*% E$vectors)^2 / matrix(E$values * C, N, P, byrow = TRUE)) |>
+rowSums() |>
+{\(x) x <= 1}() |>
+mean()
+```
+
+For a visual presentation of this procedure, consider the following example, in which we use the same parameters, but set the sample size to $N = 100$.
+
+```{r}
+Xs <- rnorm(100*P) |> matrix(100) %*% chol(S) + matrix(mu, 100, P, byrow = TRUE)
+XCs <- Xs - matrix(mu, 100, P, byrow = TRUE)
+
+angles <- seq(0, 2*pi, length.out = 50)
+unit.circle <- cbind(cos(angles), sin(angles))
+ellipse <- t(t(unit.circle %*% chol(C * diag(E$values))))
+Xdist <- ((XCs %*% E$vectors)^2 / matrix(C*E$values, 100, P, byrow = TRUE)) |>
+  rowSums()
+
+plot(Xs)
+plot(XCs)
+plot(XCs %*% E$vectors)
+lines(ellipse, col = "orange")
+points(XCs[Xdist <= 1,] %*% E$vectors, col = "blue")
+text(XCs %*% E$vectors, labels = round(Xdist, 2), pos = 2, cex = 1/2)
+```
+
+Note that this approach is exactly equivalent to calculating the quadratic form explicitly, and calculating how many observations are smaller than the critical value $C$. 
+
+```{r}
+Sinv <- solve(S)
+delta <- rowSums(XC * (XC %*% Sinv))
+mean(delta <= C)
+```
+
+Using this approach, we can directly show that the quadratic form indeed follows a $\chi^2_\nu$ distribution.
+
+```{r}
+delta |> hist(breaks = 60, freq = FALSE)
+curve(dchisq(x, df = P), add = TRUE, col = "blue")
+```
+
+Now we have obtained a method to calculate the probability of a point falling within a hyperellipse centered around the mean vector $\bmu$ with axes in the directions of the covariance matrix $\bSig$. However, when the ellipse is not centered around the mean vector, this approach will not work, and we need to resolve to a different method.
+
+## Solving $P(x \in \mathcal{A})$ when $\mathcal{A}$ is a general hyperellipse
+
+When the ellipse is not centered around the mean vector (and thus is not a constant-density hyperellipse), we need to use a different technique. It is easy to see that the probability that a point falls within a hyperellipse with same orientations and half-axis lengths around the **origin** is smaller than the probability of a point falling within the same hyperellipse centered around the mean vector. This is because the constant density hyperellipse around the origin contains the highest volume of the probability mass of all hyperellipses with the same orientation and half-axis lengths.
+
+However, we can use an approach that is not so different from the previous one. 
+
+```{r}
+((X %*% E$vectors)^2 / matrix(E$values * C, N, P, byrow = TRUE)) |>
+rowSums() |>
+{\(x) x <= 1}() |>
+mean()
+
+W <- diag(1/sqrt(C*E$values)) %*% t(E$vectors)
+mean((W %*% t(X))^2 |> colSums() < 1)
+
+shotGroups::pmvnEll(sqrt(C), sigma = S, mu = mu,
+e = solve(S), x0 = c(0,0))
+
+pchisq(C, df = length(mu), ncp = 2)
+```
+
+```{r}
+set.seed(123)
+N <- 10000000
+P <- 5
+mu <- 1:P
+
+OD <- runif(P * (P-1)/2, 0, 2)
+S <- diag(1:P)
+S[lower.tri(S)] <- OD
+S <- S + t(S)
+
+X <- rnorm(N * P) |> matrix(N) %*% chol(S) + matrix(mu, N, P, byrow = TRUE)
+XC <- X - matrix(mu, N, P, byrow = TRUE)
+E <- eigen(S)
+
+C <- 2
+
+((XC %*% E$vectors)^2 / matrix(E$values * C, N, P, byrow = TRUE)) |>
+rowSums() |>
+{\(x) x <= 1}() |>
+mean()
+
+pchisq(C, df = length(mu))
+shotGroups::pmvnEll(sqrt(C), S, mu, solve(S), mu)
+
+((X %*% E$vectors)^2 / matrix(E$values * C, N, P, byrow = TRUE)) |>
+rowSums() |>
+{\(x) x <= 1}() |>
+mean()
+
+shotGroups::pmvnEll(sqrt(C), sigma = S, mu = mu, e = solve(S), x0 = rep(0, P))
+
+pchisq(C, df = length(mu), ncp = sum(mu * (solve(S) %*% mu)))
+
+mu * (solve(S) %*% mu)
+
+delta <- rowSums(X * (X %*% solve(S)))
+mean(delta <= C)
+
+delta |> hist(breaks = 60, freq = FALSE)
+curve(dchisq(x, df = P, ncp = sum(mu * (solve(S) %*% mu))), col = "blue", add = TRUE)
+
+df <- 10
+X <- mvtnorm::rmvt(N*10, delta = mu, S, df = df, "K")
+
+delta <- rowSums(X * (X %*% solve(S)))
+mean(delta/P <= C)
+
+pf(C, df1 = P, df2 = df, ncp = sum(mu * (solve(S) %*% mu)))
+
+
+
+pchisq(C*P, df = P, ncp = sum(mu * (solve(S) %*% mu)))
+```
+
+
+In the case of a general hyperellipse, we can use the functionality in the `shotGroups` package to calculate the probability of a point falling within the hyperellipse. The `pmvnEll` function calculates the probability of a point falling within a hyperellipse with half-axis lengths $\sqrt{C}$, centered around the point $(x_1, ..., x_P)$, and with axes in the directions of the eigenvectors of the covariance matrix $\bSig$. 
+
+
+
+```{r}
+set.seed(123)
+nsim <- 10000
+
+mu <- c(1, 2)
+S <- matrix(c(2,1,1,3), 2)
+N <- 100
+
+fit <- sapply(1:nsim, function(i) {
+  m <- mvtnorm::rmvnorm(1, mu, S)
+  (mvtnorm::pmvnorm(c(0, 0), sigma = S, mean = c(m)) > 0.6)
+})
+
+mean(fit)
+pmvnorm(0, Inf, mean = mu, sigma = S)
+
+means <- sapply(1:nsim, function(i) {
+  X <- mvtnorm::rmvnorm(N, mu, S)
+  colMeans(X)
+})
+plot(t(means))
+var(t(means))
+
+mut <- t(means)
+
+tmu <- apply(mut, 1, \(x) x * expm::sqrtm(solve(S/N)) %*% x)
+plot(tmu)
+mut * (expm::sqrtm(solve(S/N)) %*% t(mut))
+
+E <- eigen(S/N)
+plot(mut %*% E$vectors)
+colMeans(mut %*% E$vectors %*% diag(1/sqrt(E$values)))
+mean((sapply(1:2, \(i) pnorm(0, (mut %*% E$vectors %*% diag(1/sqrt(E$values)))[,i], 0, 1)) |>
+rowSums()) == 0)
+
+1 - (0.5 - pchisq(qchisq(0.6, 2), df = 2, ncp = sum(mu * (solve(S/N) %*% mu)))/2)
+
+qchisq(0.6, df = 2, ncp = sum(mu * (solve(S) %*% mu)))
+mvtnorm::pmvnorm(c(0,0), sigma = S/sqrt(N), mean = mu)
+
+
+library(mvtnorm)
+library(cubature)
+
+p <- 0.6
+region_constraints <- \(x) x[1] > 0 & x[2] > 0
+chiq_q <- qchisq(p, df = 2, ncp = sum(mu * (solve(S/sqrt(N)) %*% mu)))
+mvn_pdf <- \(x, m, S) dmvnorm(x, m, S)
+integrand <- \(x) {
+  dist_squared <- t(x - mu) %*% solve(S/sqrt(N)) %*% (x - mu)
+  if (dist_squared < chiq_q & region_constraints(x)) {
+    mvn_pdf(x, mu, S/N)
+  } else {
+    0
+  }
+}
+
+result <- adaptIntegrate(integrand, c(0, 0), c(Inf, Inf))
+result
+```
+
+```{r}
+# Function to calculate the probability in the positive orthant
+calc_prob_positive_orthant <- function(mu, sigma) {
+  lower_limits <- rep(0, length(mu))
+  upper_limits <- rep(Inf, length(mu))
+  prob <- pmvnorm(lower=lower_limits, upper=upper_limits, mean=mu, sigma=sigma)
+  return(prob)
+}
+
+# Approximate mean and variance using delta method
+mean_prob <- calc_prob_positive_orthant(mu, S/N)
+
+# Gradient of the probability function at mu (approximated numerically)
+gradient <- numDeriv::grad(calc_prob_positive_orthant, mu, sigma=S/N)
+
+# Variance of the probability (delta method)
+var_prob <- t(gradient) %*% (S/N) %*% gradient
+
+# Standard deviation
+sd_prob <- sqrt(var_prob)
+
+# Normal approximation to the probability distribution
+prob_dist_approx <- function(x) {
+  pnorm(x, mean=mean_prob, sd=sd_prob)
+}
+
+# Calculate the proportion of the probability distribution exceeding threshold
+threshold_p <- 0.6
+proportion_exceeding_threshold <- 1 - prob_dist_approx(threshold_p)
+
+mus <- rnorm(10000000, 0.4, sd = 0.3)
+
+mean(mus > 0)
+mean(pnorm(0, mean=mus, sd=0.3, lower.tail = FALSE) > 0.6)
+```
+```{r}
+set.seed(1)
+mean <- 0.4
+sd <- 0.3
+mus <- rnorm(10000000, mean = mean, sd = sd)
+mean(mus > 0)
+pnorm(0, mean = mean, sd = sd, lower.tail = FALSE)
+
+thres <- 0.6
+mean(pnorm(0, mean = mus, sd = sd, lower.tail = FALSE) > thres)
+1 - pnorm((sd * qnorm(thres) - mean)/sd)
+
+means <- 2*c(0.5, 0.5)
+Sigma <- matrix(c(2,2.5,2.5,4), 2)
+mus <- rmvnorm(10000, mean = means, sigma = Sigma)
+E <- eigen(Sigma)
+
+ps <- apply(mus, 1, \(x) pmvnorm(0, mean = x, sigma = Sigma))
+mean(ps > thres)
+
+rmeans <- means %*% E$vectors %*% diag(1/sqrt(E$values))
+rSigma <- diag(2)
+E <- mean(rmeans)
+V <- 2
+
+stdmeans <- solve(expm::sqrtm(Sigma)) %*% means
+means * (solve(Sigma) %*% means)
+qchisq(0.6, 2, ncp = )
+
+
+pmvnorm(0, Inf, mean = c(stdmeans), sigma = diag(2))
+
+
+Q <- qchisq(thres, df = 2)
+pnorm(Q - E/sqrt(V))
+
+rmeans <- means %*% E$vectors %*% diag(1/sqrt(E$values))
+pnorm(rmeans %*% solve(Sigma) %*% t(rmeans))
+pnorm(qnorm(thres) - c(rmeans))
+
+
+Q <- qchisq(thres, df = 2)
+R <- Q * (t(means) %*% solve(Sigma) %*% means)
+
+rmu <- means %*% E$vectors %*% diag(1/sqrt(E$values))
+
+pmvnorm(0, Inf, 
+mean = c(rmu), sigma = diag(2))
+
+
+E <- eigen(Sigma)
+C <- qmvnorm(thres, mean = rep(0, 2))$quantile
+W <- diag(1/sqrt(C*E$values)) %*% t(E$vectors)
+pmvnorm(
+  lower = -c(Inf, Inf),
+  upper = qmvnorm(0.6, mean = rep(0, 2))$quantile,
+  mean = c(E$vectors %*% W %*% means),
+  sigma = diag(2)
+)
+
+
+pmvnorm(0, qmvnorm(0.6, mean = c(0,0))$quantile, mean = mu, sigma = Sigma)
+```
+
+
+
