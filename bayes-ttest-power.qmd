@@ -325,7 +325,7 @@ $$
 $$
 where the $\pm$ sign depends on whether the hypothesis of interest is $H_i$ or $H_{i'}$ and $\Phi^{-1}$ denotes the inverse of the cumulative normal distribution.
 The next step is to obtain the power by quantifying the probability that 
-Accordingly, the power of the test is given by the probability that $\tilde\mu > \mu_\text{critical}$. Again, this probability is given by the cumulative distribution function of the non-central $t$-distribution with $n-1$ degrees of freedom and non-centrality parameter $\delta = (\mu-\mu_0)/(\sigma^2/n).
+Accordingly, the power of the test is given by the probability that $\tilde\mu > \mu_\text{critical}$. Again, this probability is given by the cumulative distribution function of the non-central $t$-distribution with $n-1$ degrees of freedom and non-centrality parameter $\delta = (\mu-\mu_0)/(\sigma^2/n)$.
 
 
 ```{r}
@@ -413,13 +413,307 @@ mean(bfs > Q)
 BFpower(n, mu, sd, mu0, Q, "greater")
 ```
 
+## Bayesian evaluation of range hypotheses
+
+We now extend the power calculation to evaluating range hypotheses, in the sense of $\mu \in [R_l, R_u]$, where $R_l$ and $R_u$ denote the lower and upper bound of the range hypothesis. In this case, we assume that the prior distribution is centered around the center of the hypothesis space, such that the prior distribution is symmetric between the bounds of the hypothesis. Note that because the number of independent constraints in this hypothesis equals $2$, the minimal fraction of information used equals $\frac{1}{n/J}$, with $J$ at least equal to $2$. Accordingly, we can define the prior mean $\mu_0 = (R_l + R_u)/2$, and calculate the complexity of the hypothesis as
+$$
+c_i = 1 -  2 \cdot\Phi\Big(\frac{R_l - \mu_0}{\sqrt{\hat\sigma^2/J}}\Big).
+$$
+To determine the fit of the hypothesis, we cannot use this symmetry property, because the posterior distribution is not symmetric around the center of the hypothesis space (unless the posterior mean is exactly equal to the posterior mean). Instead, the fit of the hypothesis of interest is calculated as
+$$
+f_i = \Phi\Bigg(\frac{R_u - \hat\mu}{\sqrt{\hat\sigma^2/n}}\Bigg) - \Phi\Bigg(\frac{R_l - \hat\mu}{\sqrt{\hat\sigma^2/n}}\Bigg).
+$$
+
+### Sketch of the approach to take
+
+Start from the assumption that $\hat\sigma^2$ is fixed, so that the complexity is determined a priori. Then, we can calculate the maximum Bayes factor that is obtainable ($1/c_i$), and we can obtain the probability that $f_i$ is greater by some value, by calculating how far from the bounds it must be to exceed some value. Say we fix $\hat\sigma^2 = 1$ and set $J=2$ and $R_l = -0.1$ and $R_u = 0.1$. Then, the complexity is defined as follows.
+
+```{r}
+1 - 2*pnorm(-0.1, 0, 1/2)
+```
+Moreover, to obtain a Bayes factor of $Q \geq 2$, the fit of the hypothesis must be at least $f_i \geq `r round(2 * (1 - 2*pnorm(-0.1, 0, 1/2)), 4)`$. Given that we again fix the variance $\hat\sigma^2 = 1$ and have $n = 20$, $\mu$ must lie between the following numbers to obtain a fit of $f_i \geq `r round(2 * (1 - 2*pnorm(-0.1, 0, 1/2)), 4)`$.
+
+```{r}
+mu <- 0
+sigma <- 1
+n <- 20
+
+
+fi <- function(mu, varx, n, Rl, Ru) {
+  pnorm(Ru, mu, sqrt(varx/n)) - pnorm(Rl, mu, sqrt(varx/n))
+}
+
+D <- uniroot(\(x) fi(x, sigma, n, -0.1, 0.1) - 2 * (1 - 2*pnorm(-0.1, 0, sigma/sqrt(2))), 
+             interval = c(0, 10000))$root
+```
+
+We can again calculate the probability that $\hat\mu$ lies between $(R_l + R_u)/2 \pm D$ using a $t$-distribution. 
+
+```{r}
+bf <- function(meanx, varx, n, J = 1, Rl, Ru) {
+  ci <- pnorm(Ru, (Rl+Ru)/2, sqrt(varx/(2*J))) - pnorm(Rl, (Rl+Ru)/2, sqrt(varx/(2*J)))
+  fi <- pnorm(Ru, meanx, sqrt(varx/n)) - pnorm(Rl, meanx, sqrt(varx/n))
+  
+  c(ci = ci, fi = fi, BF = fi/ci)
+}
+bf(mean(x), var(x), n, 1, -0.1, 0.1)
+bain::bain(fit, "x > -0.1 & x < 0.1", fraction = 1)$fit$BF.u[1]
+
+
+bfs <- sapply(1:100000, \(i) {
+  x <- rnorm(20)
+  bf(mean(x), 1, 20, 1, -0.1, 0.1)
+})
+
+mean(bfs[3,] > 2)
+
+pt(D*sqrt(20), n-1) - pt(-D*sqrt(20), n-1)
+## But, because we fix the variance here, we can use a normal distribution, 
+## instead of the t-distribution
+pnorm(D*sqrt(20)) - pnorm(-D*sqrt(20))
+```
+
+So, using some simplifying assumptions, it is easy to calculate the power of the hypothesis of interest approximately. Once the variance is known, it is straightforward to calculate the power, also for different variances and sample sizes. However, we now note that not only the mean varies between samples, the estimated variance varies over the samples as well. 
+The estimated variances affect both the complexity and the fit of the hypothesis, and thus introduces an additional complexity, because it affects both in different ways.
+
+
+## A better approximation
+
+To calculate the power of the Bayes factor of an informative hypothesis, we need to calculate the following triple integral
+$$
+\int_{-\infty}^{\infty}\int_0^{\infty}
+\mathbb{I}\Bigg\{
+\int_{R_l}^{R_u}
+\frac{1}{\sqrt{2\pi\hat\sigma^2/n}} 
+\exp\Big\{-\frac{(x - \hat\mu)^2}{2\hat\sigma^2/n}\Big\} \text{d}x ~~ \Big/ \\
+\int_{R_l}^{R_u}\frac{1}{\sqrt{2\pi\hat\sigma^2/J}} 
+\exp\Big\{-\frac{(x - \mu^*)^2}{2\hat\sigma^2/J}\Big\}
+\text{d}x > T \Bigg\}
+\text{d}\hat\sigma \text{d}\hat\mu,
+$$
+where $\mu^*$ is defined as $(R_l * R_u)/2$, $\mathbb{I}$ denotes the indicator function and $T$ defines the Bayes factor threshold. Additionally, we assume a normally distributed sample mean $\hat\mu$ with population mean $\mu$ and population variance $\sigma^2/n$ and a scaled chi-squared distributed sample variance $\hat\sigma^2$ with scaling factor $(n-1)\sigma^2$ and $n-1$ degrees of freedom (TODO: check whether formulation of variance is correct). 
+
+We integrate over the sampling distributions of the mean and the variance. In compact notation, we can rewrite this as
+$$
+\int_{-\infty}^{\infty}\int_0^{\infty} \mathbb{I} \Big\{ f_i(\hat\mu, \hat\sigma, n)/c_i(\hat\sigma, J) > T \Big\} 
+\text{d}\hat\mu \text{d}\hat\sigma,
+$$
+where we explicitly rewrite the fit and complexity as functions of the mean, variance, sample size and fraction of information used. 
+
+### Integrating complexity over the variance
+
+We establish that the complexity is a function of the variance only, and it's threshold is easily calculated using a chi-square distribution. Then, we can easily calculate the boundary value for which the complexity exceeds some threshold, and calculate the probability that the complexity exceeds this boundary value.
+
+Below, we set the variance equal to $\sigma^2 = 1$ and $\sigma^2 = 2^2 = 4$ and evaluate the probability that the complexity is smaller than $0.15$ and $0.1$, respectively. 
+
+```{r}
+## And using variance 1
+bfs <- sapply(1:1000000, \(i) {
+  x <- rnorm(20)
+  bf(mean(x), var(x), 20, 1, -0.1, 0.1)
+})
+
+mean(bfs[1,] < 0.15)
+
+# Critical value
+C <- uniroot(\(x) pnorm(0.1, 0, sqrt(x/2)) - pnorm(-0.1, 0, sqrt(x/2)) - 0.15,
+             interval = c(0, 10))$root
+
+1 - pchisq(C * 19, 19)
+
+
+bfs <- sapply(1:1000000, \(i) {
+  x <- rnorm(20, 0, 2)
+  bf(mean(x), var(x), 20, 1, -0.1, 0.1)
+})
+
+mean(bfs[1,] < 0.1)
+
+# Critical value
+C <- uniroot(\(x) pnorm(0.1, 0, sqrt(x/2)) - pnorm(-0.1, 0, sqrt(x/2)) - 0.1,
+             interval = c(0, 10))$root
+
+1 - pchisq(C * 19 / 4, 19)
+```
+
+::: {.callout-tip title="Distribution of sampling variance"}
+
+When the mean of the distribution is known, the sampling distribution distribution follows a scaled chi-squared distribution $\hat\sigma^2 \sim \sigma/n \cdot \chi^2_n$. When the mean of the distribution is unknown, the sampling distribution also follows a chi-squared distribution, but one degree of freedom is lost by calculating the sample mean, which yields $\hat\sigma^2 \sim \sigma/(n-1) \cdot \chi^2_{n-1}$.
+
+```{r}
+# distribution of the variance:
+hist(replicate(100000, var(rnorm(20, 0, 2))), freq= FALSE, breaks = 50)
+curve(dchisq(x * 19 / 4, 19) * 19/4, add = TRUE)
+hist(replicate(100000, mean(rnorm(20, 0, 2)^2)), freq= FALSE, breaks = 50)
+curve(dchisq(x * 20 / 4, 20) * 20/4, add = TRUE)
+```
+:::
+
+
+### Integrating fit over the mean and variance
+
+For the fit of the hypothesis, we also want to calculate the probability that some threshold is exceeded. This is a bit more difficult, because the fit is a function of both the variance and the mean. However, we can automate this using the `cubature` package, which calculates the integral numerically. To do this, we can define the distribution of the mean and the variance, and integrate the indicator function for the Bayes factors over these distributions. 
+
+
+```{r}
+library(cubature)
+
+integrand <- \(musigma, threshold) {
+  mu <- musigma[1]
+  sigma <- sqrt(musigma[2])
+  Fx <- pnorm(0.1, mu, sigma/sqrt(10)) - pnorm(-0.1, mu, sigma/sqrt(10))
+  indicator <- 1 / (1 + exp(-100000 * (Fx - threshold)))
+  
+  dmu <- dnorm(mu, mean = 0, sd = 2/sqrt(10))
+  dsigma <- dchisq(sigma^2 * 9/4, df = 9)*9/4
+  
+  indicator * dmu * dsigma
+}
+
+res <- adaptIntegrate(
+  integrand, 
+  lower = c(-Inf, 0),
+  upper = c(Inf, Inf),#,
+  threshold = 0.2
+  #tol = 1e-3
+)
+
+mean(bfs[2,] > 0.2)
+```
+
+```{r}
+library(cubature)
+
+integrand <- \(musigmahat, threshold, mu, sigma, n) {
+  df <- n-1
+  muhat <- musigmahat[1]
+  sigmahat <- sqrt(musigmahat[2])
+  Fx <- pnorm(0.1, muhat, sigmahat/sqrt(n)) - 
+    pnorm(-0.1, muhat, sigmahat/sqrt(n))
+  indicator <- ifelse(Fx > threshold, 1, 0)
+
+  dmu <- dnorm(muhat, mean = mu, sd = sigma/sqrt(n))
+  dsigma <- dchisq(sigmahat^2 * df / sigma^2, df = df)*df/sigma^2
+  
+  indicator * dmu * dsigma
+}
+
+
+system.time(
+  res <- adaptIntegrate(
+    integrand, 
+    lower = c(-Inf, 0),
+    upper = c(Inf, Inf),
+    threshold = 0.2, mu = 0, sigma = 2, n = 20
+  )
+)
+
+res
+
+mean(bfs[2,] > 0.2)
+```
+
+Unfortunately, this whole set-up is rather slow, perhaps because the indicator function yields a non-smooth function to be evaluated by the integral. To speed this up, we can also approximate the integral using a smooth function approximation to this indicator function, by specifying a steep logit curve at the threshold point, where the function moves quickly from zero to one. An alternative could be to lower the tolerance, but we use this approach first. 
+
+
+```{r}
+integrand <- \(musigmahat, threshold, mu, sigma, n) {
+  df <- n-1
+  muhat <- musigmahat[1]
+  sigmahat <- sqrt(musigmahat[2])
+  Fx <- pnorm(0.1, muhat, sigmahat/sqrt(n)) - 
+    pnorm(-0.1, muhat, sigmahat/sqrt(n))
+  indicator <- 1 / (1 + exp(-1000 * (Fx - threshold)))
+
+  dmu <- dnorm(muhat, mean = mu, sd = sigma/sqrt(n))
+  dsigma <- dchisq(sigmahat^2 * df / sigma^2, df = df)*df/sigma^2
+  
+  indicator * dmu * dsigma
+}
+
+
+system.time(
+  res <- adaptIntegrate(
+    integrand, 
+    lower = c(-Inf, 0),
+    upper = c(Inf, Inf),
+    threshold = 0.2, mu = 0, sigma = 2, n = 20
+  )
+)
+
+res
+
+mean(bfs[2,] > 0.2)
+```
+
+This approach shows that we can get a reasonable approximation of the power of the Bayes factor using a smooth approximation to the indicator function. To further speed up the function evaluation, we can also lower the tolerance of the `adaptIntegrate()` function. 
+
+### Integrating the Bayes factor over fit and complexity
+
+Now we have everything in place to calculate the power of the Bayes factor over both the fit and complexity of the hypothesis of interest. In fact, we can simply expand the calculation of fit by incorporating the calculation of the complexity as well, which yields the power of the Bayes factor. We made some additional adaptations to the previous code to enhance computational efficiency, for example by vectorizing the computations. 
+
+```{r}
+integrand <- \(musigmahat, threshold, mu, var, n) {
+  df <- n-1
+  dfvar <- df/var
+  sn <- sqrt(musigmahat[2,]/n)
+  s2 <- sqrt(musigmahat[2,]/2)
+  fit <- pnorm(0.1, musigmahat[1,], sn) - pnorm(-0.1, musigmahat[1,], sn)
+  comp <- 1 - 2 * pnorm(-0.1, 0, s2)
+  ind <- 1 / (1 + exp(-1000 * (fit/comp - threshold)))
+  matrix(ind * dnorm(musigmahat[1,], mu, sqrt(var/n)) * 
+    dchisq(musigmahat[2,]*dfvar, df) * dfvar,
+    ncol = ncol(musigmahat))
+}
+
+system.time(
+  res <- adaptIntegrate(
+    integrand, 
+    lower = c(-Inf, 0),
+    upper = c(Inf, Inf),
+    threshold = 2, mu = 0, var = 2, n = 20,
+    vectorInterface = TRUE
+  )
+)
+
+res
+
+mean(bfs[3,] > 2)
+```
+
+Now we are able to calculate the power of the Bayes factor for a given sample size on the basis of the mean and variance of the data, without having to sample from any distribution.
+
+We can now easily use R's built-in root-finding algorithm to compute for which sample size the power of the Bayes factor exceeds some threshold. 
+
+```{r}
+power <- 0.8
+
+fx <- \(x) {
+  adaptIntegrate(
+    integrand,
+    lower = c(-Inf, 0),
+    upper = c(Inf, Inf),
+    threshold = 2, mu = 0, var = 2, n = x,
+    vectorInterface = TRUE
+  )$integral - power
+}
+
+fx(20)
+
+uniroot(fx, c(5, 1000))
+```
+
+
+
 # Loose ends
 
 Now we have defined Bayes power analysis for the one-sample $t$-test under the approximate adjusted Bayes factor set-up. However, there are some loose ends that still need to be tied up.
 
-1. How can we calculate the power of the Bayes factor when the informative hypothesis of interest is a range hypothesis? Under the current set-up, the scaled sample mean changes as a function of the sample size. I'm assuming it is straightforward to scale the sampling distribution of the mean accordingly, but this is to be investigated.
-2. More importantly is the question how to calculate the power of the Bayes factor when two informative hypotheses are evaluated against each other. Currently, we only evaluated against the unconstrained hypothesis. This is a more difficult problem, as we have to take into account that the Bayes factor is dependent on quantities in both the numerator and the denominator. This problem should solely affect the calculation of the critical value, which can always be done approximately, by using the `uniroot()` function in `R`.
-3. We have not yet investigated the power of the Bayes factor under a multi-parameter set-up. Yet, this is possible using a (non-central) $\chi^2$-distribution or a (non-central) $F$-distribution.
+1. A follow-up question is how to calculate the power of the Bayes factor when two informative hypotheses are evaluated against each other. Currently, we only evaluated against the unconstrained hypothesis. This is a more difficult problem, as we have to take into account that the Bayes factor is dependent on quantities in both the numerator and the denominator. Presumably, this is just an extension of the work already done, either by calculating the critical value in a different way, or by letting `cubature` integrate over an additional distribution as well. 
+2. We have not yet investigated the power of the Bayes factor under a multi-parameter set-up. Yet, this is possible using a (non-central) $\chi^2$-distribution or a (non-central) $F$-distribution, at least for null hypotheses. For informative hypotheses, the problem might be more complex.
+
+
+
 
 <!-- # Power of a Bayesian two-sample t-test -->
 
